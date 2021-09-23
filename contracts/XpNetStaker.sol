@@ -33,6 +33,10 @@ contract XpNetStaker is ERC721, Ownable {
         token = _token;
     }
 
+    event StakeCreated(address owner, uint256 amt);
+    event StakeWithdrawn(address owner, uint256 amt);
+    event SudoWithdraw(address to, uint256 amt);
+
     /*
     Initates a stake
     @param _amt: The amount of ERC20 tokens that are being staked.
@@ -49,6 +53,7 @@ contract XpNetStaker is ERC721, Ownable {
             block.timestamp
         );
         stakes[nonce] = _newStake;
+        emit StakeCreated(msg.sender, _amt);
         nonce += 1;
     }
 
@@ -66,6 +71,7 @@ contract XpNetStaker is ERC721, Ownable {
         _burn(_tokenID);
         uint256 _reward = _calculateRewards(_stake.lockInPeriod, _stake.amount);
         token.transferFrom(address(this), msg.sender, _stake.amount + _reward);
+        emit StakeWithdrawn(msg.sender, _stake.amount);
         delete stakes[nonce];
     }
 
@@ -102,5 +108,6 @@ contract XpNetStaker is ERC721, Ownable {
      */
     function sudo_withdraw_token(address _to, uint256 _amt) public onlyOwner {
         token.transferFrom(address(this), _to, _amt);
+        emit SudoWithdraw(_to, _amt);
     }
 }
