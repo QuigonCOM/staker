@@ -43,8 +43,17 @@ contract XpNetStaker is ERC721, Ownable {
     @param _timeperiod: The amount of time for which these are being staked.
      */
     function stake(uint256 _amt, uint256 _timeperiod) public {
-        _mint(msg.sender, nonce);
-        token.transferFrom(msg.sender, address(this), _amt);
+        require(
+            token.transferFrom(msg.sender, address(this), _amt),
+            "Please approve the staking amount in native token first."
+        );
+        require(
+            _timeperiod == 90 days ||
+                _timeperiod == 180 days ||
+                _timeperiod == 270 days ||
+                _timeperiod == 365 days,
+            "Please make sure the amount specified is one of the four [90 days, 180 days, 270 days, 365 days]."
+        );
         Stake memory _newStake = Stake(
             _amt,
             nonce,
@@ -52,6 +61,7 @@ contract XpNetStaker is ERC721, Ownable {
             0,
             block.timestamp
         );
+        _mint(msg.sender, nonce);
         stakes[nonce] = _newStake;
         emit StakeCreated(msg.sender, _amt);
         nonce += 1;
