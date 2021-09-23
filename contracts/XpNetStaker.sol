@@ -6,8 +6,9 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/math/SafeMath.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
-contract XpNetStaker is ERC721, Ownable {
+contract XpNetStaker is Ownable, ERC721URIStorage {
     using SafeMath for uint256;
     // A struct represnting a stake.
     struct Stake {
@@ -89,6 +90,14 @@ contract XpNetStaker is ERC721, Ownable {
         delete stakes[nonce];
     }
 
+    function setURI(uint256 tokenId, string calldata uri) public {
+        require(ownerOf(tokenId) == msg.sender, "you don't own this nft");
+        bytes memory prev = bytes(tokenURI(tokenId));
+        require(prev.length == 0, "can't change token uri");
+
+        _setTokenURI(tokenId, uri);
+    }
+
     function _calculateRewards(
         uint256 _lockInPeriod,
         uint256 _amt,
@@ -122,7 +131,7 @@ contract XpNetStaker is ERC721, Ownable {
                 _lockInPeriod) * 125) / 100;
             return _amt.mul(rewardPercentage);
         } else {
-            // TODO: Handle
+            // unreachable
             return 0;
         }
     }
