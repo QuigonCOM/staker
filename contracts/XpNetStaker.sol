@@ -69,25 +69,50 @@ contract XpNetStaker is ERC721, Ownable {
             "Stake hasnt matured yet."
         );
         _burn(_tokenID);
-        uint256 _reward = _calculateRewards(_stake.lockInPeriod, _stake.amount);
+        uint256 _reward = _calculateRewards(
+            _stake.lockInPeriod,
+            _stake.amount,
+            _stake.startTime
+        );
         token.transferFrom(address(this), msg.sender, _stake.amount + _reward);
         emit StakeWithdrawn(msg.sender, _stake.amount);
         delete stakes[nonce];
     }
 
-    function _calculateRewards(uint256 _lockInPeriod, uint256 _amt)
-        private
-        returns (uint256)
-    {
-        if (_lockInPeriod == 90 days) {
-            return _amt.mul(0.45);
-        } else if (_lockInPeriod == 180 days) {
-            return _amt.mul(0.75);
-        } else if (_lockInPeriod == 270 days) {
-            return _amt.mul(1);
-        } else if (_lockInPeriod == 365 days) {
-            return _amt.mul(1.25);
+    function _calculateRewards(
+        uint256 _lockInPeriod,
+        uint256 _amt,
+        uint256 _startTime
+    ) private view returns (uint256) {
+        if (
+            _lockInPeriod == 90 days || (block.timestamp - _startTime) < 90 days
+        ) {
+            uint256 rewardPercentage = (((block.timestamp - _startTime) /
+                _lockInPeriod) * 45) / 100;
+            return _amt.mul(rewardPercentage);
+        } else if (
+            _lockInPeriod == 180 days ||
+            (block.timestamp - _startTime) < 180 days
+        ) {
+            uint256 rewardPercentage = (((block.timestamp - _startTime) /
+                _lockInPeriod) * 75) / 100;
+            return _amt.mul(rewardPercentage);
+        } else if (
+            _lockInPeriod == 270 days ||
+            (block.timestamp - _startTime) < 270 days
+        ) {
+            uint256 rewardPercentage = (((block.timestamp - _startTime) /
+                _lockInPeriod) * 100) / 100;
+            return _amt.mul(rewardPercentage);
+        } else if (
+            _lockInPeriod == 365 days ||
+            (block.timestamp - _startTime) < 365 days
+        ) {
+            uint256 rewardPercentage = (((block.timestamp - _startTime) /
+                _lockInPeriod) * 125) / 100;
+            return _amt.mul(rewardPercentage);
         } else {
+            // TODO: Handle
             return 0;
         }
     }
