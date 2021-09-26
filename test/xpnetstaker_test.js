@@ -1,4 +1,4 @@
-const { expect } = require("chai");
+const { expect, assert } = require("chai");
 const { ethers } = require("hardhat");
 
 describe("XpNetStaker", function () {
@@ -63,16 +63,16 @@ describe("XpNetStaker", function () {
 
   it("tries to make sudo trasnsaction", async () => {
     await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
-    let balAfterTransfer = (await xpnet.balanceOf(addr1.address)).toNumber();
-    expect(balAfterTransfer).to.be.equals(1000);
+    await xpnet.connect(addr1).approve(staker.address, 1000);
+    let receipt = await (
+      await staker.connect(addr1).stake(1000, 90 * 86400)
+    ).wait();
+    let event = receipt.events?.filter((x) => {
+      return x.event == "Transfer";
+    })[0];
 
-    await (await xpnet.connect(addr1).approve(staker.address, 1000)).wait();
-    await (await staker.connect(addr1).stake(1000, 90 * 86400)).wait();
-    let balAfterStake = (await xpnet.balanceOf(addr1.address)).toNumber();
-    expect(balAfterStake).to.be.equals(0);
-
-    await staker.connect(owner).sudo_withdraw_token(addr1.address, 5);
-    let balAfterSudo = (await xpnet.balanceOf(addr1.address)).toNumber();
-    expect(balAfterSudo).to.be.equals(5);
+    await staker.connect(owner).sudo_withdraw_token(event.args.tokenId);
+    let stake = await staker.stakes(event.args.tokenId);
+    assert(stake.amount.toNumber() == 0);
   });
 });

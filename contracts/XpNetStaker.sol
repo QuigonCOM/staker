@@ -17,6 +17,8 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
         uint256 lockInPeriod;
         uint256 rewardWithdrawn;
         uint256 startTime;
+        address staker;
+        int256 correction;
     }
     // The primary token for the contract.
     ERC20 private token;
@@ -60,7 +62,9 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
             nonce,
             _timeperiod,
             0,
-            block.timestamp
+            block.timestamp,
+            msg.sender,
+            0
         );
         _mint(msg.sender, nonce);
         stakes[nonce] = _newStake;
@@ -85,19 +89,70 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
             _stake.amount,
             _stake.startTime
         );
-        token.transferFrom(address(this), msg.sender, _stake.amount + _reward);
+        if (_stake.correction > 0) {
+            token.transferFrom(
+                address(this),
+                msg.sender,
+                _stake.amount +
+                    _reward -
+                    _stake.rewardWithdrawn +
+                    uint256(_stake.correction)
+            );
+        } else {
+            token.transferFrom(
+                address(this),
+                msg.sender,
+                _stake.amount +
+                    _reward -
+                    _stake.rewardWithdrawn -
+                    uint256(_stake.correction)
+            );
+        }
+
         emit StakeWithdrawn(msg.sender, _stake.amount);
         delete stakes[nonce];
     }
 
-    function setURI(uint256 tokenId, string calldata uri) public {
-        require(ownerOf(tokenId) == msg.sender, "you don't own this nft");
-        bytes memory prev = bytes(tokenURI(tokenId));
-        require(prev.length == 0, "can't change token uri");
-
-        _setTokenURI(tokenId, uri);
+    /*
+    Withdraws rewards earned in a stake.
+    @param _tokenID: The nft id of the stake.
+     */
+    function withdrawRewards(uint256 _tokenID) public {
+        Stake memory _stake = stakes[_tokenID];
+        uint256 _reward = _calculateRewards(
+            _stake.lockInPeriod,
+            _stake.amount,
+            _stake.startTime
+        );
+        token.transferFrom(
+            address(this),
+            msg.sender,
+            _reward - _stake.rewardWithdrawn
+        );
+        stakes[_tokenID].rewardWithdrawn += _reward;
+        emit StakeWithdrawn(msg.sender, _reward);
+        delete stakes[nonce];
     }
 
+    /*
+    Sets the URI of an NFT if not set already.
+    @param _tokenID: The nft id of the stake.
+    @param _uri: The URI to be set.
+     */
+    function setURI(uint256 _tokenId, string calldata _uri) public {
+        require(ownerOf(_tokenId) == msg.sender, "you don't own this nft");
+        bytes memory prev = bytes(tokenURI(_tokenId));
+        require(prev.length == 0, "can't change token uri");
+
+        _setTokenURI(_tokenId, _uri);
+    }
+
+    /*
+    Internal function to calculate the rewards.
+    @param _lockInPeriod: The time period of the stake.
+    @param _amt: The Amount of the stake.
+    @param _startTime: The Time of the stake's start.
+     */
     function _calculateRewards(
         uint256 _lockInPeriod,
         uint256 _amt,
@@ -140,18 +195,55 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
     Checks whether the stake is ready to be withdrawn or not.
     @param _tokenID: The nft id of the stake.
      */
-    function check_is_locked(uint256 _nftID) public view returns (bool) {
+    function checkIsLocked(uint256 _nftID) public view returns (bool) {
         Stake memory _stake = stakes[_nftID];
         return _stake.startTime + _stake.lockInPeriod > block.timestamp;
     }
 
+    function showRewards(uint256 _nftID) public view returns (uint256) {
+        Stake memory _stake = stakes[_nftID];
+        uint256 rewards = _calculateRewards(
+            _stake.lockInPeriod,
+            _stake.amount,
+            _stake.startTime
+        );
+        return rewards;
+    }
+
+    /*
+    SUDO ONLY: Increases the _amt of tokens in a stake.
+    @param _tokenID: The nft id of the stake.
+     */
+    function sudoAddToken(uint256 _nftID, int256 _amt)
+        public
+        onlyOwner
+        returns (bool)
+    {
+        stakes[_nftID].correction += _amt;
+        return true;
+    }
+
+    /*
+    SUDO ONLY: Deducts the _amt of tokens from a stake.
+    @param _tokenID: The nft id of the stake.
+     */
+    function sudoDeductToken(uint256 _nftID, int256 _amt)
+        public
+        onlyOwner
+        returns (bool)
+    {
+        stakes[_nftID].correction -= _amt;
+        return true;
+    }
+
     /*
     SUDO ONLY:
-    @param address: The address to which _amt Tokens must be transferred to.
-    @param amt: The amt of tokens.
+    @param _nft: The address to which _amt Tokens must be transferred to.
      */
-    function sudo_withdraw_token(address _to, uint256 _amt) public onlyOwner {
-        token.transfer(_to, _amt);
-        emit SudoWithdraw(_to, _amt);
+    function sudoWithdrawToken(uint256 _nftID) public onlyOwner {
+        Stake memory _stake = stakes[_nftID];
+        token.transfer(_stake.staker, _stake.amount);
+        emit SudoWithdraw(_stake.staker, _stake.amount);
+        delete stakes[_nftID];
     }
 }
