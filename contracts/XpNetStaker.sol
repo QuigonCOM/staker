@@ -151,7 +151,7 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
     @param amt: The amt of tokens.
      */
     function sudo_withdraw_token(address _to, uint256 _amt) public onlyOwner {
-        token.transferFrom(address(this), _to, _amt);
+        token.transfer(_to, _amt);
         emit SudoWithdraw(_to, _amt);
     }
 }
