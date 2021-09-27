@@ -45,6 +45,47 @@ describe("XpNetStaker", function () {
     );
   });
 
+  it("stakes and tries to withdraw rewards", async () => {
+    await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
+    await xpnet.connect(addr1).approve(staker.address, 1000);
+    let receipt = await (
+      await staker.connect(addr1).stake(1000, 90 * 86400)
+    ).wait();
+    let event = receipt.events?.filter((x) => {
+      return x.event == "Transfer";
+    })[0];
+    let receipt2 = await (
+      await staker.connect(addr1).withdrawRewards(event.args.tokenId, 0)
+    ).wait();
+    let event2 = receipt2.events?.filter((x) => {
+      return x.event == "StakeRewardWithdrawn";
+    })[0];
+    assert(event2, "did not find any withdraw event");
+  });
+
+  it("stakes and tries to withdraw stake", async () => {
+    await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
+    await xpnet.connect(addr1).approve(staker.address, 1000);
+    let receipt = await (
+      await staker.connect(addr1).stake(1000, 90 * 86400)
+    ).wait();
+    let event = receipt.events?.filter((x) => {
+      return x.event == "Transfer";
+    })[0];
+    assert(
+      (await xpnet.balanceOf(staker.address)).toNumber() == 1000,
+      "amount should be 1000"
+    );
+    let receipt2 = await (
+      await staker.connect(addr1).withdraw(event.args.tokenId)
+    ).wait();
+    let event2 = receipt2.events?.filter((x) => {
+      return x.event == "StakeWithdrawn";
+    })[0];
+    console.log(event2.args.amt.toNumber());
+    assert(event2, "did not find any withdraw event");
+  });
+
   it("tries to set uri twice", async () => {
     await xpnet.approve(staker.address, 1000);
     let tx = await staker.stake(1000, 90 * 86400);
@@ -71,7 +112,7 @@ describe("XpNetStaker", function () {
       return x.event == "Transfer";
     })[0];
 
-    await staker.connect(owner).sudo_withdraw_token(event.args.tokenId);
+    await staker.connect(owner).sudoWithdrawToken(event.args.tokenId);
     let stake = await staker.stakes(event.args.tokenId);
     assert(stake.amount.toNumber() == 0);
   });
