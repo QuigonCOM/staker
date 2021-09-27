@@ -48,6 +48,7 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
     @param _timeperiod: The amount of time for which these are being staked.
      */
     function stake(uint256 _amt, uint256 _timeperiod) public {
+        require(_amt != 0, "You cant stake 0 tokens.");
         require(
             token.transferFrom(msg.sender, address(this), _amt),
             "Please approve the staking amount in native token first."
@@ -93,24 +94,11 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
             _stake.amount,
             _stake.startTime
         );
-        if (_stake.correction > 0) {
-            token.transferFrom(
-                address(this),
-                _stake.staker,
-                _stake.amount +
-                    _reward -
-                    _stake.rewardWithdrawn +
-                    uint256(_stake.correction)
-            );
-        } else {
-            token.transferFrom(
-                address(this),
-                _stake.staker,
-                _stake.amount +
-                    _reward -
-                    (_stake.rewardWithdrawn - uint256(_stake.correction))
-            );
-        }
+        uint256 _final = uint256(
+            int256(_stake.amount + _reward - _stake.rewardWithdrawn) +
+                _stake.correction
+        );
+        token.transferFrom(address(this), _stake.staker, _final);
         emit StakeWithdrawn(msg.sender, _stake.amount);
         delete stakes[nonce];
     }
@@ -128,23 +116,14 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
             _stake.amount,
             _stake.startTime
         );
-        if (_stake.correction > 0) {
-            require(
-                _amt <=
-                    _reward -
-                        _stake.rewardWithdrawn +
-                        uint256(_stake.correction),
-                "cannot withdraw amount more than currently earned rewards"
-            );
-        } else {
-            require(
-                _amt <=
-                    _reward -
-                        _stake.rewardWithdrawn -
-                        uint256(_stake.correction),
-                "cannot withdraw amount more than currently earned rewards"
-            );
-        }
+        uint256 _final = uint256(
+            int256(_stake.amount + _reward - _stake.rewardWithdrawn) +
+                _stake.correction
+        );
+        require(
+            _amt <= _final,
+            "cannot withdraw amount more than currently earned rewards"
+        );
 
         require(
             token.transferFrom(address(this), msg.sender, _amt),
@@ -230,18 +209,16 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
     {
         Stake memory _stake = stakes[_nftID];
         require(_stake.isActive, "The given token id is incorrect.");
-        uint256 rewards = _calculateRewards(
+        uint256 _reward = _calculateRewards(
             _stake.lockInPeriod,
             _stake.amount,
             _stake.startTime
         );
-        if (_stake.correction > 0) {
-            return
-                rewards - _stake.rewardWithdrawn + uint256(_stake.correction);
-        } else {
-            return
-                rewards - _stake.rewardWithdrawn - uint256(_stake.correction);
-        }
+        return
+            uint256(
+                int256(_stake.amount + _reward - _stake.rewardWithdrawn) +
+                    _stake.correction
+            );
     }
 
     /*
