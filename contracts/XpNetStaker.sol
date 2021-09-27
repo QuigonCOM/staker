@@ -9,7 +9,6 @@ import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
 
 contract XpNetStaker is Ownable, ERC721URIStorage {
-    using SafeMath for uint256;
     // A struct represnting a stake.
     struct Stake {
         uint256 amount;
@@ -37,10 +36,11 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
         token = _token;
     }
 
-    event StakeCreated(address owner, uint256 amt);
+    event StakeCreated(address owner, uint256 amt, uint256 nftID);
     event StakeWithdrawn(address owner, uint256 amt);
     event StakeRewardWithdrawn(address owner, uint256 amt);
     event SudoWithdraw(address to, uint256 amt);
+    event TestingEvent(uint256 lockInPeriod, uint256 startTime, uint256 reward);
 
     /*
     Initates a stake
@@ -72,7 +72,7 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
         );
         _mint(msg.sender, nonce);
         stakes[nonce] = _newStake;
-        emit StakeCreated(msg.sender, _amt);
+        emit StakeCreated(msg.sender, _amt, nonce);
         nonce += 1;
     }
 
@@ -81,14 +81,14 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
     @requires - The Stake Time Period must be completed before it is ready to be withdrawn.
     @param _tokenID: The nft id of the stake.
      */
-    function withdraw(uint256 _tokenID) public {
-        Stake memory _stake = stakes[_tokenID];
+    function withdraw(uint256 _nftID) public {
+        Stake memory _stake = stakes[_nftID];
         require(_stake.isActive, "The given token id is incorrect.");
         require(
-            _stake.startTime + _stake.lockInPeriod > block.timestamp,
+            _stake.startTime + _stake.lockInPeriod <= block.timestamp,
             "Stake hasnt matured yet."
         );
-        _burn(_tokenID);
+        _burn(_nftID);
         uint256 _reward = _calculateRewards(
             _stake.lockInPeriod,
             _stake.amount,
@@ -98,18 +98,21 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
             int256(_stake.amount + _reward - _stake.rewardWithdrawn) +
                 _stake.correction
         );
-        token.transferFrom(address(this), _stake.staker, _final);
-        emit StakeWithdrawn(msg.sender, _stake.amount);
+        require(
+            token.transfer(msg.sender, _final),
+            "failed to withdraw rewards"
+        );
+        emit StakeWithdrawn(msg.sender, _final);
         delete stakes[nonce];
     }
 
     /*
     Withdraws rewards earned in a stake.
     The rewards are send to the address which calls this function.
-    @param _tokenID: The nft id of the stake.
+    @param _nftID: The nft id of the stake.
      */
-    function withdrawRewards(uint256 _tokenID, uint256 _amt) public {
-        Stake memory _stake = stakes[_tokenID];
+    function withdrawRewards(uint256 _nftID, uint256 _amt) public {
+        Stake memory _stake = stakes[_nftID];
         require(_stake.isActive, "The given token id is incorrect.");
         uint256 _reward = _calculateRewards(
             _stake.lockInPeriod,
@@ -125,13 +128,10 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
             "cannot withdraw amount more than currently earned rewards"
         );
 
-        require(
-            token.transferFrom(address(this), msg.sender, _amt),
-            "failed to withdraw rewards"
-        );
+        require(token.transfer(msg.sender, _amt), "failed to withdraw rewards");
 
-        stakes[_tokenID].rewardWithdrawn += _reward;
-        emit StakeRewardWithdrawn(msg.sender, _reward);
+        stakes[_nftID].rewardWithdrawn += _reward;
+        emit StakeRewardWithdrawn(msg.sender, _amt);
     }
 
     /*
@@ -159,37 +159,36 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
         uint256 _amt,
         uint256 _startTime
     ) private view returns (uint256) {
+        uint256 _reward;
         if (
             _lockInPeriod == 90 days || (block.timestamp - _startTime) < 90 days
         ) {
             uint256 rewardPercentage = (((block.timestamp - _startTime) /
-                _lockInPeriod) * ((45 * 365) / _lockInPeriod)) / 100;
-            return _amt.mul(rewardPercentage);
+                _lockInPeriod) * 4050) / 365;
+            _reward = (_amt * rewardPercentage) / 1000;
         } else if (
             _lockInPeriod == 180 days ||
             (block.timestamp - _startTime) < 180 days
         ) {
             uint256 rewardPercentage = (((block.timestamp - _startTime) /
-                _lockInPeriod) * ((75 * 365) / _lockInPeriod)) / 100;
-            return _amt.mul(rewardPercentage);
+                _lockInPeriod) * 13500) / 365;
+            _reward = (_amt * rewardPercentage) / 1000;
         } else if (
             _lockInPeriod == 270 days ||
             (block.timestamp - _startTime) < 270 days
         ) {
             uint256 rewardPercentage = (((block.timestamp - _startTime) /
-                _lockInPeriod) * ((100 * 365) / _lockInPeriod)) / 100;
-            return _amt.mul(rewardPercentage);
+                _lockInPeriod) * 27000) / 365;
+            _reward = (_amt * rewardPercentage) / 1000;
         } else if (
             _lockInPeriod == 365 days ||
             (block.timestamp - _startTime) < 365 days
         ) {
             uint256 rewardPercentage = (((block.timestamp - _startTime) /
-                _lockInPeriod) * ((125 * 365) / _lockInPeriod)) / 100;
-            return _amt.mul(rewardPercentage);
-        } else {
-            // unreachable
-            return 0;
+                _lockInPeriod) * 45625) / 365;
+            _reward = (_amt * rewardPercentage) / 1000;
         }
+        return _reward;
     }
 
     /*
@@ -199,7 +198,7 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
     function checkIsLocked(uint256 _nftID) public view returns (bool) {
         Stake memory _stake = stakes[_nftID];
         require(_stake.isActive, "The given token id is incorrect.");
-        return _stake.startTime + _stake.lockInPeriod > block.timestamp;
+        return block.timestamp >= _stake.startTime + _stake.lockInPeriod;
     }
 
     function showAvailableRewards(uint256 _nftID)
@@ -216,8 +215,7 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
         );
         return
             uint256(
-                int256(_stake.amount + _reward - _stake.rewardWithdrawn) +
-                    _stake.correction
+                int256(_reward - _stake.rewardWithdrawn) + _stake.correction
             );
     }
 

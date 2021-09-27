@@ -1,3 +1,4 @@
+const { BigNumber } = require("@ethersproject/bignumber");
 const { expect, assert } = require("chai");
 const { ethers } = require("hardhat");
 
@@ -14,6 +15,7 @@ describe("XpNetStaker", function () {
 
     const Staker = await ethers.getContractFactory("XpNetStaker");
     staker = await Staker.deploy(xpnet.address);
+    await (await xpnet.connect(owner).transfer(staker.address, 1000000)).wait();
   });
 
   it("admin matches deployer", async () => {
@@ -45,7 +47,7 @@ describe("XpNetStaker", function () {
     );
   });
 
-  it("stakes and tries to withdraw rewards", async () => {
+  it("stakes and tries to withdraw 1token from rewards", async () => {
     await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
     await xpnet.connect(addr1).approve(staker.address, 1000);
     let receipt = await (
@@ -54,18 +56,40 @@ describe("XpNetStaker", function () {
     let event = receipt.events?.filter((x) => {
       return x.event == "Transfer";
     })[0];
+    await ethers.provider.send("evm_increaseTime", [90 * 80000]);
     let receipt2 = await (
-      await staker.connect(addr1).withdrawRewards(event.args.tokenId, 0)
+      await staker.connect(addr1).withdrawRewards(event.args.tokenId, 1)
     ).wait();
-    let event2 = receipt2.events?.filter((x) => {
-      return x.event == "StakeRewardWithdrawn";
+    assert(
+      (await xpnet.balanceOf(addr1.address)).toNumber() == 1,
+      "withdraw failed"
+    );
+  });
+
+  it("tries withdrawing tokens before maturity is reached", async () => {
+    await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
+    await xpnet.connect(addr1).approve(staker.address, 1000);
+    let receipt = await (
+      await staker.connect(addr1).stake(1000, 90 * 86400)
+    ).wait();
+    let event = receipt.events?.filter((x) => {
+      return x.event == "StakeCreated";
     })[0];
-    assert(event2, "did not find any withdraw event");
+    assert(event, "did not find any stake event");
+    await ethers.provider.send("evm_increaseTime", [90 * 86300]);
+    await expect(
+      staker.connect(addr1).withdraw(event.args.nftID)
+    ).to.revertedWith(
+      "VM Exception while processing transaction: reverted with reason string 'Stake hasnt matured yet.'"
+    );
   });
 
   it("stakes and tries to withdraw stake", async () => {
     await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
     await xpnet.connect(addr1).approve(staker.address, 1000);
+    let contractBalanceBefore = (
+      await xpnet.balanceOf(staker.address)
+    ).toNumber();
     let receipt = await (
       await staker.connect(addr1).stake(1000, 90 * 86400)
     ).wait();
@@ -73,17 +97,15 @@ describe("XpNetStaker", function () {
       return x.event == "Transfer";
     })[0];
     assert(
-      (await xpnet.balanceOf(staker.address)).toNumber() == 1000,
-      "amount should be 1000"
+      (await xpnet.balanceOf(staker.address)).toNumber() ==
+        contractBalanceBefore + 1000,
+      "amount should be increased by 1000"
     );
-    let receipt2 = await (
-      await staker.connect(addr1).withdraw(event.args.tokenId)
-    ).wait();
-    let event2 = receipt2.events?.filter((x) => {
-      return x.event == "StakeWithdrawn";
-    })[0];
-    console.log(event2.args.amt.toNumber());
-    assert(event2, "did not find any withdraw event");
+    await ethers.provider.send("evm_increaseTime", [91 * 86900]);
+    await ethers.provider.send("evm_mine", []);
+    expect(
+      (await staker.showAvailableRewards(event.args.tokenId)).toNumber()
+    ).to.be.equal(11);
   });
 
   it("tries to set uri twice", async () => {
@@ -115,5 +137,34 @@ describe("XpNetStaker", function () {
     await staker.connect(owner).sudoWithdrawToken(event.args.tokenId);
     let stake = await staker.stakes(event.args.tokenId);
     assert(stake.amount.toNumber() == 0);
+  });
+
+  it("tests sudo increase correct", async () => {
+    await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
+    await xpnet.connect(addr1).approve(staker.address, 1000);
+    let receipt = await (
+      await staker.connect(addr1).stake(1000, 90 * 86400)
+    ).wait();
+    let event = receipt.events?.filter((x) => {
+      return x.event == "Transfer";
+    })[0];
+
+    await staker.connect(owner).sudoAddToken(event.args.tokenId, 5);
+    let stake = await staker.stakes(event.args.tokenId);
+    assert(stake.correction.toNumber() == 5);
+  });
+
+  it("tests sudo decrease correction", async () => {
+    await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
+    await xpnet.connect(addr1).approve(staker.address, 1000);
+    let receipt = await (
+      await staker.connect(addr1).stake(1000, 90 * 86400)
+    ).wait();
+    let event = receipt.events?.filter((x) => {
+      return x.event == "Transfer";
+    })[0];
+    await staker.connect(owner).sudoDeductToken(event.args.tokenId, 5);
+    let stake = await staker.stakes(event.args.tokenId);
+    assert(stake.correction.toNumber() == -5);
   });
 });
