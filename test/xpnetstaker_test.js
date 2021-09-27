@@ -11,7 +11,7 @@ describe("XpNetStaker", function () {
     [owner, addr1, addr2, addr3, addr4] = await ethers.getSigners();
 
     const XPNet = await ethers.getContractFactory("XpNet");
-    xpnet = await XPNet.deploy(100000000000, "XpNet", 18, "XPT");
+    xpnet = await XPNet.deploy();
 
     const Staker = await ethers.getContractFactory("XpNetStaker");
     staker = await Staker.deploy(xpnet.address);
@@ -24,7 +24,7 @@ describe("XpNetStaker", function () {
 
   it("stakes for 90 days without approving", async () => {
     await expect(staker.stake(500, 90 * 86400)).to.be.revertedWith(
-      "VM Exception while processing transaction: reverted with reason string 'token balance or allowance is lower than amount requested'"
+      "VM Exception while processing transaction: reverted with reason string 'ERC20: transfer amount exceeds allowance'"
     );
   });
 
