@@ -14,7 +14,7 @@
     "lodash": "4.17.21",
     "node-fetch": "2.6.1",
     "set-value": "4.0.1",
-    "underscore": "1.12.1",
+    "underscore": "1.13.1",
     "yargs-parser": "5.0.1"
   },
   "license": "MIT"
