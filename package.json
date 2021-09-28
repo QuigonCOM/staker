@@ -12,10 +12,9 @@
     "@openzeppelin/contracts": "^4.3.2",
     "ansi-regex": "6.0.1",
     "lodash": "4.17.21",
+    "set-value": "4.1.0",
     "node-fetch": "3.0.0",
-    "set-value": "4.0.1",
     "underscore": "1.13.1",
-    "underscore": "1.12.1",
     "yargs-parser": "20.2.9"
   },
   "license": "MIT"
