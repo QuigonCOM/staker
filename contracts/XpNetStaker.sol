@@ -26,6 +26,8 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
     // The NFT nonce which is used to keep the track of nftIDs.
     uint256 private nonce = 0;
 
+    uint256 public stakedCount = 0;
+
     // stakes[nftTokenId] => Stake
     mapping(uint256 => Stake) public stakes;
 
@@ -49,6 +51,10 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
      */
     function stake(uint256 _amt, uint256 _timeperiod) public {
         require(_amt != 0, "You cant stake 0 tokens.");
+        require(
+            stakedCount + _amt <= 50_000_000,
+            "Maximum count for stakes reached."
+        );
         require(
             token.transferFrom(msg.sender, address(this), _amt),
             "Please approve the staking amount in native token first."
@@ -74,6 +80,7 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
         stakes[nonce] = _newStake;
         emit StakeCreated(msg.sender, _amt, nonce);
         nonce += 1;
+        stakedCount += _amt;
     }
 
     /*
@@ -98,6 +105,7 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
             int256(_stake.amount + _reward - _stake.rewardWithdrawn) +
                 _stake.correction
         );
+        stakedCount -= _final;
         require(
             token.transfer(msg.sender, _final),
             "failed to withdraw rewards"

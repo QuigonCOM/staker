@@ -261,6 +261,18 @@ describe("XpNetStaker", function () {
     assert(stake.correction.toNumber() == 5);
   });
 
+  it("stakes 51 million tokens", async () => {
+    await (
+      await xpnet.connect(owner).transfer(addr1.address, 51_000_000)
+    ).wait();
+    await xpnet.connect(addr1).approve(staker.address, 51_000_000);
+    let receipt = expect(
+      staker.connect(addr1).stake(51_000_000, 90 * 86400)
+    ).to.revertedWith(
+      "VM Exception while processing transaction: reverted with reason string 'Maximum count for stakes reached.'"
+    );
+  });
+
   it("tests sudo decrease correction", async () => {
     await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
     await xpnet.connect(addr1).approve(staker.address, 1000);
