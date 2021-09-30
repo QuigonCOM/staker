@@ -48,8 +48,13 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
     Initates a stake
     @param _amt: The amount of ERC20 tokens that are being staked.
     @param _timeperiod: The amount of time for which these are being staked.
+    @param _metadataUri: The metadata URI of the NFT token.
      */
-    function stake(uint256 _amt, uint256 _timeperiod) public {
+    function stake(
+        uint256 _amt,
+        uint256 _timeperiod,
+        string calldata _metadataUri
+    ) public {
         require(_amt != 0, "You cant stake 0 tokens.");
         require(
             stakedCount + _amt <= 50_000_000,
@@ -78,6 +83,7 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
         );
         _mint(msg.sender, nonce);
         stakes[nonce] = _newStake;
+        _setTokenURI(nonce, _metadataUri);
         emit StakeCreated(msg.sender, _amt, nonce);
         nonce += 1;
         stakedCount += _amt;
@@ -140,20 +146,6 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
 
         stakes[_nftID].rewardWithdrawn += _reward;
         emit StakeRewardWithdrawn(msg.sender, _amt);
-    }
-
-    /*
-    Sets the URI of an NFT if not set already.
-    @param _tokenID: The nft id of the stake.
-    @param _uri: The URI to be set.
-     */
-    function setURI(uint256 _tokenId, string calldata _uri) public {
-        require(stakes[_tokenId].isActive, "The given token id is incorrect.");
-        require(ownerOf(_tokenId) == msg.sender, "you don't own this nft");
-        bytes memory prev = bytes(tokenURI(_tokenId));
-        require(prev.length == 0, "can't change token uri");
-
-        _setTokenURI(_tokenId, _uri);
     }
 
     /*

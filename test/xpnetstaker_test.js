@@ -23,7 +23,9 @@ describe("XpNetStaker", function () {
   });
 
   it("stakes for 90 days without approving", async () => {
-    await expect(staker.stake(500, 90 * 86400)).to.be.revertedWith(
+    await expect(
+      staker.stake(500, 90 * 86400, "https://google.com")
+    ).to.be.revertedWith(
       "VM Exception while processing transaction: reverted with reason string 'ERC20: transfer amount exceeds allowance'"
     );
   });
@@ -31,44 +33,40 @@ describe("XpNetStaker", function () {
   it("stakes tokens by addr1 for 90 days with approval", async () => {
     await (await xpnet.connect(owner).transfer(addr1.address, 4000)).wait();
     await xpnet.connect(addr1).approve(staker.address, 4000);
-    await expect(staker.connect(addr1).stake(1000, 90 * 86400)).to.emit(
-      staker,
-      "Transfer"
-    );
-    await expect(staker.connect(addr1).stake(1000, 180 * 86400)).to.emit(
-      staker,
-      "Transfer"
-    );
-    await expect(staker.connect(addr1).stake(1000, 270 * 86400)).to.emit(
-      staker,
-      "Transfer"
-    );
-    await expect(staker.connect(addr1).stake(1000, 365 * 86400)).to.emit(
-      staker,
-      "Transfer"
-    );
+    await expect(
+      staker.connect(addr1).stake(1000, 90 * 86400, "https://google.com")
+    ).to.emit(staker, "Transfer");
+    await expect(
+      staker.connect(addr1).stake(1000, 180 * 86400, "https://google.com")
+    ).to.emit(staker, "Transfer");
+    await expect(
+      staker.connect(addr1).stake(1000, 270 * 86400, "https://google.com")
+    ).to.emit(staker, "Transfer");
+    await expect(
+      staker.connect(addr1).stake(1000, 365 * 86400, "https://google.com")
+    ).to.emit(staker, "Transfer");
   });
 
   it("stakes tokens by addr1 for wrong number of days with approval", async () => {
     await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
     await xpnet.connect(addr1).approve(staker.address, 1000);
     await expect(
-      staker.connect(addr1).stake(1000, 90 * 86200)
+      staker.connect(addr1).stake(1000, 90 * 86200, "https://google.com")
     ).to.be.revertedWith(
       "VM Exception while processing transaction: reverted with reason string 'Please make sure the amount specified is one of the four [90 days, 180 days, 270 days, 365 days]."
     );
     await expect(
-      staker.connect(addr1).stake(1000, 180 * 86200)
+      staker.connect(addr1).stake(1000, 180 * 86200, "https://google.com")
     ).to.be.revertedWith(
       "VM Exception while processing transaction: reverted with reason string 'Please make sure the amount specified is one of the four [90 days, 180 days, 270 days, 365 days]."
     );
     await expect(
-      staker.connect(addr1).stake(1000, 270 * 86200)
+      staker.connect(addr1).stake(1000, 270 * 86200, "https://google.com")
     ).to.be.revertedWith(
       "VM Exception while processing transaction: reverted with reason string 'Please make sure the amount specified is one of the four [90 days, 180 days, 270 days, 365 days]."
     );
     await expect(
-      staker.connect(addr1).stake(1000, 365 * 86200)
+      staker.connect(addr1).stake(1000, 365 * 86200, "https://google.com")
     ).to.be.revertedWith(
       "VM Exception while processing transaction: reverted with reason string 'Please make sure the amount specified is one of the four [90 days, 180 days, 270 days, 365 days]."
     );
@@ -78,7 +76,7 @@ describe("XpNetStaker", function () {
     await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
     await xpnet.connect(addr1).approve(staker.address, 1000);
     let receipt = await (
-      await staker.connect(addr1).stake(1000, 90 * 86400)
+      await staker.connect(addr1).stake(1000, 90 * 86400, "https://google.com")
     ).wait();
     let event = receipt.events?.filter((x) => {
       return x.event == "Transfer";
@@ -97,7 +95,7 @@ describe("XpNetStaker", function () {
     await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
     await xpnet.connect(addr1).approve(staker.address, 1000);
     let receipt = await (
-      await staker.connect(addr1).stake(1000, 90 * 86400)
+      await staker.connect(addr1).stake(1000, 90 * 86400, "https://google.com")
     ).wait();
     let event = receipt.events?.filter((x) => {
       return x.event == "StakeCreated";
@@ -118,7 +116,7 @@ describe("XpNetStaker", function () {
       await xpnet.balanceOf(staker.address)
     ).toNumber();
     let receipt = await (
-      await staker.connect(addr1).stake(1000, 90 * 86400)
+      await staker.connect(addr1).stake(1000, 90 * 86400, "https://google.com")
     ).wait();
     let event = receipt.events?.filter((x) => {
       return x.event == "Transfer";
@@ -142,7 +140,7 @@ describe("XpNetStaker", function () {
       await xpnet.balanceOf(staker.address)
     ).toNumber();
     let receipt = await (
-      await staker.connect(addr1).stake(1000, 180 * 86400)
+      await staker.connect(addr1).stake(1000, 180 * 86400, "https://google.com")
     ).wait();
     let event = receipt.events?.filter((x) => {
       return x.event == "Transfer";
@@ -166,7 +164,7 @@ describe("XpNetStaker", function () {
       await xpnet.balanceOf(staker.address)
     ).toNumber();
     let receipt = await (
-      await staker.connect(addr1).stake(1000, 270 * 86400)
+      await staker.connect(addr1).stake(1000, 270 * 86400, "https://google.com")
     ).wait();
     let event = receipt.events?.filter((x) => {
       return x.event == "Transfer";
@@ -190,7 +188,7 @@ describe("XpNetStaker", function () {
       await xpnet.balanceOf(staker.address)
     ).toNumber();
     let receipt = await (
-      await staker.connect(addr1).stake(1000, 365 * 86400)
+      await staker.connect(addr1).stake(1000, 365 * 86400, "https://google.com")
     ).wait();
     let event = receipt.events?.filter((x) => {
       return x.event == "Transfer";
@@ -207,27 +205,11 @@ describe("XpNetStaker", function () {
     ).to.be.equal(125);
   });
 
-  it("tries to set uri twice", async () => {
-    await xpnet.approve(staker.address, 1000);
-    let tx = await staker.stake(1000, 90 * 86400);
-    let receipt = await tx.wait();
-    let event = receipt.events?.filter((x) => {
-      return x.event == "Transfer";
-    })[0];
-
-    await staker.setURI(event.args.tokenId, "https://google.com");
-    expect(
-      staker.setURI(event.args.tokenId, "https://google.com")
-    ).to.be.revertedWith(
-      "VM Exception while processing transaction: reverted with reason string 'can't change token uri'"
-    );
-  });
-
   it("tries to make sudo trasnsaction", async () => {
     await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
     await xpnet.connect(addr1).approve(staker.address, 1000);
     let receipt = await (
-      await staker.connect(addr1).stake(1000, 90 * 86400)
+      await staker.connect(addr1).stake(1000, 90 * 86400, "https://google.com")
     ).wait();
     let event = receipt.events?.filter((x) => {
       return x.event == "Transfer";
@@ -246,7 +228,7 @@ describe("XpNetStaker", function () {
     await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
     await xpnet.connect(addr1).approve(staker.address, 1000);
     let receipt = await (
-      await staker.connect(addr1).stake(1000, 90 * 86400)
+      await staker.connect(addr1).stake(1000, 90 * 86400, "https://google.com")
     ).wait();
     let event = receipt.events?.filter((x) => {
       return x.event == "Transfer";
@@ -267,7 +249,7 @@ describe("XpNetStaker", function () {
     ).wait();
     await xpnet.connect(addr1).approve(staker.address, 51_000_000);
     let receipt = expect(
-      staker.connect(addr1).stake(51_000_000, 90 * 86400)
+      staker.connect(addr1).stake(51_000_000, 90 * 86400, "https://google.com")
     ).to.revertedWith(
       "VM Exception while processing transaction: reverted with reason string 'Maximum count for stakes reached.'"
     );
@@ -277,7 +259,7 @@ describe("XpNetStaker", function () {
     await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
     await xpnet.connect(addr1).approve(staker.address, 1000);
     let receipt = await (
-      await staker.connect(addr1).stake(1000, 90 * 86400)
+      await staker.connect(addr1).stake(1000, 90 * 86400, "https://google.com")
     ).wait();
 
     let event = receipt.events?.filter((x) => {
