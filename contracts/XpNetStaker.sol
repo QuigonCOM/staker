@@ -101,22 +101,13 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
             _stake.startTime + _stake.lockInPeriod <= block.timestamp,
             "Stake hasnt matured yet."
         );
+        require(_stake.staker == msg.sender, "You dont own this stake.");
         _burn(_nftID);
-        uint256 _reward = _calculateRewards(
-            _stake.lockInPeriod,
-            _stake.amount,
-            _stake.startTime
-        );
-        uint256 _final = uint256(
-            int256(_stake.amount + _reward - _stake.rewardWithdrawn) +
-                _stake.correction
-        );
-        stakedCount -= _final;
         require(
-            token.transfer(msg.sender, _final),
+            token.transfer(msg.sender, _stake.amount),
             "failed to withdraw rewards"
         );
-        emit StakeWithdrawn(msg.sender, _final);
+        emit StakeWithdrawn(msg.sender, _stake.amount);
         delete stakes[nonce];
     }
 
