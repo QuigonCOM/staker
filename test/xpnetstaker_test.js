@@ -245,6 +245,39 @@ describe("XpNetStaker", function () {
     );
   });
 
+  it("stakes 100tokens for 90 days and fails when someone other than nft owner tries to  withdraw rewards", async () => {
+    await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
+    await xpnet.connect(addr1).approve(staker.address, 1000);
+    let contractBalanceBefore = (
+      await xpnet.balanceOf(staker.address)
+    ).toNumber();
+    let receipt = await (
+      await staker.connect(addr1).stake(1000, 365 * 86400, "https://google.com")
+    ).wait();
+    let event = receipt.events?.filter((x) => {
+      return x.event == "Transfer";
+    })[0];
+    await ethers.provider.send("evm_increaseTime", [365 * 86401]);
+    await ethers.provider.send("evm_mine", []);
+    expect(
+      staker.connect(addr2).withdrawRewards(event.args.tokenId, 5)
+    ).to.revertedWith(
+      "VM Exception while processing transaction: reverted with reason string 'You dont own this nft.'"
+    );
+    await (
+      await staker
+        .connect(addr1)
+        [`safeTransferFrom(address,address,uint256)`](
+          addr1.address,
+          addr2.address,
+          event.args.tokenId
+        )
+    ).wait();
+    expect(
+      staker.connect(addr2).withdrawRewards(event.args.tokenId, 5)
+    ).to.emit(staker, "StakeRewardWithdrawn");
+  });
+
   it("tries to make sudo trasnsaction", async () => {
     await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
     await xpnet.connect(addr1).approve(staker.address, 1000);
