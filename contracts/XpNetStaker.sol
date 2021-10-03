@@ -124,6 +124,7 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
             _stake.amount,
             _stake.startTime
         );
+        require(ownerOf(_nftID) == msg.sender, "You dont own this nft.");
         uint256 _final = uint256(
             int256(_stake.amount + _reward - _stake.rewardWithdrawn) +
                 _stake.correction
@@ -135,7 +136,7 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
 
         require(token.transfer(msg.sender, _amt), "failed to withdraw rewards");
 
-        stakes[_nftID].rewardWithdrawn += _reward;
+        stakes[_nftID].rewardWithdrawn += _amt;
         emit StakeRewardWithdrawn(msg.sender, _amt);
     }
 
