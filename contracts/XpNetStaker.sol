@@ -1,14 +1,12 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "hardhat/console.sol";
-import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721URIStorage.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
 
-contract XpNetStaker is Ownable, ERC721URIStorage {
+contract XpNetStaker is Ownable, ERC721, ERC721Enumerable, ERC721URIStorage {
     // A struct represnting a stake.
     struct Stake {
         uint256 amount;
@@ -47,6 +45,39 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
     event StakeRewardWithdrawn(address owner, uint256 amt);
     event SudoWithdraw(address to, uint256 amt);
     event TestingEvent(uint256 lockInPeriod, uint256 startTime, uint256 reward);
+
+    function _beforeTokenTransfer(
+        address from,
+        address to,
+        uint256 tokenId
+    ) internal override(ERC721, ERC721Enumerable) {
+        super._beforeTokenTransfer(from, to, tokenId);
+    }
+
+    function _burn(uint256 tokenId)
+        internal
+        override(ERC721, ERC721URIStorage)
+    {
+        super._burn(tokenId);
+    }
+
+    function tokenURI(uint256 tokenId)
+        public
+        view
+        override(ERC721, ERC721URIStorage)
+        returns (string memory)
+    {
+        return super.tokenURI(tokenId);
+    }
+
+    function supportsInterface(bytes4 interfaceId)
+        public
+        view
+        override(ERC721, ERC721Enumerable)
+        returns (bool)
+    {
+        return super.supportsInterface(interfaceId);
+    }
 
     function _baseURI() internal view override returns (string memory) {
         return baseUri;
@@ -110,7 +141,10 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
             "Stake hasnt matured yet."
         );
         require(_stake.staker == msg.sender, "You dont own this stake.");
-        require(!stakes[_nftID].stakeWithdrawn, "You have already withdrawn your stake.");
+        require(
+            !stakes[_nftID].stakeWithdrawn,
+            "You have already withdrawn your stake."
+        );
         require(
             token.transfer(msg.sender, _stake.amount),
             "failed to withdraw rewards"
