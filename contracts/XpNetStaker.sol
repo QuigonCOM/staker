@@ -26,6 +26,8 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
     // The NFT nonce which is used to keep the track of nftIDs.
     uint256 private nonce = 0;
 
+    string public baseUri = "";
+
     uint256 public stakedCount = 0;
 
     // stakes[nftTokenId] => Stake
@@ -36,6 +38,7 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
      */
     constructor(ERC20 _token) ERC721("XpNetStaker", "XPS") {
         token = _token;
+        baseUri = "https://staking-api.xp.network/staking-nfts/";
     }
 
     event StakeCreated(address owner, uint256 amt, uint256 nftID);
@@ -44,17 +47,21 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
     event SudoWithdraw(address to, uint256 amt);
     event TestingEvent(uint256 lockInPeriod, uint256 startTime, uint256 reward);
 
+    function _baseURI() internal view override returns (string memory) {
+        return baseUri;
+    }
+
+    function setBaseUri(string memory _newUri) public onlyOwner {
+        baseUri = _newUri;
+    }
+
     /*
     Initates a stake
     @param _amt: The amount of ERC20 tokens that are being staked.
     @param _timeperiod: The amount of time for which these are being staked.
     @param _metadataUri: The metadata URI of the NFT token.
      */
-    function stake(
-        uint256 _amt,
-        uint256 _timeperiod,
-        string calldata _metadataUri
-    ) public {
+    function stake(uint256 _amt, uint256 _timeperiod) public {
         require(_amt != 0, "You cant stake 0 tokens.");
         require(
             stakedCount + _amt <= 50_000_000,
@@ -83,7 +90,6 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
         );
         _mint(msg.sender, nonce);
         stakes[nonce] = _newStake;
-        _setTokenURI(nonce, _metadataUri);
         emit StakeCreated(msg.sender, _amt, nonce);
         nonce += 1;
         stakedCount += _amt;
