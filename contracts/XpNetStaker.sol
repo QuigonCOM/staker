@@ -19,6 +19,7 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
         address staker;
         int256 correction;
         bool isActive;
+        bool stakeWithdrawn;
     }
     // The primary token for the contract.
     ERC20 private token;
@@ -86,7 +87,8 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
             block.timestamp,
             msg.sender,
             0,
-            true
+            true,
+            false
         );
         _mint(msg.sender, nonce);
         stakes[nonce] = _newStake;
@@ -108,13 +110,13 @@ contract XpNetStaker is Ownable, ERC721URIStorage {
             "Stake hasnt matured yet."
         );
         require(_stake.staker == msg.sender, "You dont own this stake.");
-        _burn(_nftID);
+        require(!stakes[_nftID].stakeWithdrawn, "You have already withdrawn your stake.");
         require(
             token.transfer(msg.sender, _stake.amount),
             "failed to withdraw rewards"
         );
+        stakes[_nftID].stakeWithdrawn = true;
         emit StakeWithdrawn(msg.sender, _stake.amount);
-        delete stakes[nonce];
     }
 
     /*
