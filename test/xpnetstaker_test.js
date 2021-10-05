@@ -336,11 +336,15 @@ describe("XpNetStaker", function () {
 
   it("stakes 51 million tokens", async () => {
     await (
-      await xpnet.connect(owner).transfer(addr1.address, 51_000_000)
+      await xpnet
+        .connect(owner)
+        .transfer(addr1.address, "50000000000000000000000000")
     ).wait();
-    await xpnet.connect(addr1).approve(staker.address, 51_000_000);
+    await xpnet
+      .connect(addr1)
+      .approve(staker.address, "50000000000000000000000000");
     let receipt = expect(
-      staker.connect(addr1).stake(51_000_000, 90 * 86400)
+      staker.connect(addr1).stake("50000000000000000000000000")
     ).to.revertedWith(
       "VM Exception while processing transaction: reverted with reason string 'Maximum count for stakes reached.'"
     );

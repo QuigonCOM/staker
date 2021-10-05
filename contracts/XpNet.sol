@@ -5,6 +5,11 @@ import "@openzeppelin/contracts/token/ERC20/presets/ERC20PresetFixedSupply.sol";
 
 contract XpNet is ERC20PresetFixedSupply {
     constructor()
-        ERC20PresetFixedSupply("XpNet", "XPNET", 10000000000, msg.sender)
+        ERC20PresetFixedSupply(
+            "XpNet",
+            "XPNET",
+            5000000000000000000000000000,
+            msg.sender
+        )
     {}
 }

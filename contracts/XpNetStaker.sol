@@ -96,7 +96,7 @@ contract XpNetStaker is Ownable, ERC721, ERC721Enumerable, ERC721URIStorage {
     function stake(uint256 _amt, uint256 _timeperiod) public {
         require(_amt != 0, "You cant stake 0 tokens.");
         require(
-            stakedCount + _amt <= 50_000_000,
+            stakedCount + _amt <= 50_000_000 * (10**18),
             "Maximum count for stakes reached."
         );
         require(
