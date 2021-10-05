@@ -137,10 +137,6 @@ describe("XpNetStaker", function () {
       return x.event == "StakeCreated";
     })[0];
     assert(event, "did not find any stake event");
-    console.log(
-      (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
-        .timestamp
-    );
     await ethers.provider.send("evm_increaseTime", [90 * 86300]);
     await ethers.provider.send("evm_mine", []);
     await assert(
@@ -366,13 +362,13 @@ describe("XpNetStaker", function () {
     await (
       await xpnet
         .connect(owner)
-        .transfer(addr1.address, "50000000000000000000000000")
+        .transfer(addr1.address, "500000000000000000000000000")
     ).wait();
     await xpnet
       .connect(addr1)
-      .approve(staker.address, "50000000000000000000000000");
-    let receipt = expect(
-      staker.connect(addr1).stake("50000000000000000000000000")
+      .approve(staker.address, "500000000000000000000000000");
+    expect(
+      staker.connect(addr1).stake("500000000000000000000000000", 90 * 86400)
     ).to.revertedWith(
       "VM Exception while processing transaction: reverted with reason string 'Maximum count for stakes reached.'"
     );
