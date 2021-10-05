@@ -137,7 +137,7 @@ contract XpNetStaker is Ownable, ERC721, ERC721Enumerable, ERC721URIStorage {
         Stake memory _stake = stakes[_nftID];
         require(_stake.isActive, "The given token id is incorrect.");
         require(
-            _stake.startTime + _stake.lockInPeriod <= block.timestamp,
+            block.timestamp >= _stake.startTime + _stake.lockInPeriod,
             "Stake hasnt matured yet."
         );
         require(_stake.staker == msg.sender, "You dont own this stake.");
@@ -229,7 +229,7 @@ contract XpNetStaker is Ownable, ERC721, ERC721Enumerable, ERC721URIStorage {
     Checks whether the stake is ready to be withdrawn or not.
     @param _nftID: The nft id of the stake.
      */
-    function checkIsLocked(uint256 _nftID) public view returns (bool) {
+    function checkIsUnlocked(uint256 _nftID) public view returns (bool) {
         Stake memory _stake = stakes[_nftID];
         require(_stake.isActive, "The given token id is incorrect.");
         return block.timestamp >= _stake.startTime + _stake.lockInPeriod;

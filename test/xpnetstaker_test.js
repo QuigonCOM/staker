@@ -127,6 +127,34 @@ describe("XpNetStaker", function () {
     );
   });
 
+  it("test checkIsUnlocked", async () => {
+    await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
+    await xpnet.connect(addr1).approve(staker.address, 1000);
+    let receipt = await (
+      await staker.connect(addr1).stake(1000, 90 * 86400)
+    ).wait();
+    let event = receipt.events?.filter((x) => {
+      return x.event == "StakeCreated";
+    })[0];
+    assert(event, "did not find any stake event");
+    console.log(
+      (await ethers.provider.getBlock(await ethers.provider.getBlockNumber()))
+        .timestamp
+    );
+    await ethers.provider.send("evm_increaseTime", [90 * 86300]);
+    await ethers.provider.send("evm_mine", []);
+    await assert(
+      (await staker.checkIsUnlocked(event.args.nftID)) == false,
+      "failed to test checkIsUnlocked"
+    );
+    await ethers.provider.send("evm_increaseTime", [91 * 86400]);
+    await ethers.provider.send("evm_mine", []);
+    assert(
+      (await staker.checkIsUnlocked(event.args.nftID)) == true,
+      "failed to test checkIsUnlocked"
+    );
+  });
+
   it("stakes 100tokens for 90 days and tries to check rewards after maturity, should equal 11", async () => {
     await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
     await xpnet.connect(addr1).approve(staker.address, 1000);
