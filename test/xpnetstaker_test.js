@@ -152,99 +152,91 @@ describe("XpNetStaker", function () {
   });
 
   it("stakes 100tokens for 90 days and tries to check rewards after maturity, should equal 11", async () => {
-    await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
-    await xpnet.connect(addr1).approve(staker.address, 1000);
+    const hundredTokens = "100000000000000000000";
+    await (
+      await xpnet.connect(owner).transfer(addr1.address, hundredTokens)
+    ).wait();
+    await xpnet.connect(addr1).approve(staker.address, hundredTokens);
     let contractBalanceBefore = (
       await xpnet.balanceOf(staker.address)
     ).toNumber();
     let receipt = await (
-      await staker.connect(addr1).stake(1000, 90 * 86400)
+      await staker.connect(addr1).stake(hundredTokens, 90 * 86400)
     ).wait();
     let event = receipt.events?.filter((x) => {
       return x.event == "Transfer";
     })[0];
-    assert(
-      (await xpnet.balanceOf(staker.address)).toNumber() ==
-        contractBalanceBefore + 1000,
-      "amount should be increased by 1000"
-    );
-    await ethers.provider.send("evm_increaseTime", [91 * 86900]);
+    await ethers.provider.send("evm_increaseTime", [90 * 86400]);
     await ethers.provider.send("evm_mine", []);
     expect(
-      (await staker.showAvailableRewards(event.args.tokenId)).toNumber()
-    ).to.be.equal(11);
+      (await staker.showAvailableRewards(event.args.tokenId)).toString()
+    ).to.be.equal("11250000000000000000");
   });
 
   it("stakes 100tokens for 180 days and tries to check rewards after maturity, should equal 36", async () => {
-    await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
-    await xpnet.connect(addr1).approve(staker.address, 1000);
+    const hundredTokens = "100000000000000000000";
+    await (
+      await xpnet.connect(owner).transfer(addr1.address, hundredTokens)
+    ).wait();
+    await xpnet.connect(addr1).approve(staker.address, hundredTokens);
     let contractBalanceBefore = (
       await xpnet.balanceOf(staker.address)
     ).toNumber();
     let receipt = await (
-      await staker.connect(addr1).stake(1000, 180 * 86400)
+      await staker.connect(addr1).stake(hundredTokens, 180 * 86400)
     ).wait();
     let event = receipt.events?.filter((x) => {
       return x.event == "Transfer";
     })[0];
-    assert(
-      (await xpnet.balanceOf(staker.address)).toNumber() ==
-        contractBalanceBefore + 1000,
-      "amount should be increased by 1000"
-    );
-    await ethers.provider.send("evm_increaseTime", [180 * 86401]);
+    await ethers.provider.send("evm_increaseTime", [180 * 86400]);
     await ethers.provider.send("evm_mine", []);
     expect(
-      (await staker.showAvailableRewards(event.args.tokenId)).toNumber()
-    ).to.be.equal(36);
+      (await staker.showAvailableRewards(event.args.tokenId)).toString()
+    ).to.be.equal("37500000000000000000");
   });
 
   it("stakes 100tokens for 270 days and tries to check rewards after maturity, should equal 73", async () => {
-    await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
-    await xpnet.connect(addr1).approve(staker.address, 1000);
+    const hundredTokens = "100000000000000000000";
+    await (
+      await xpnet.connect(owner).transfer(addr1.address, hundredTokens)
+    ).wait();
+    await xpnet.connect(addr1).approve(staker.address, hundredTokens);
     let contractBalanceBefore = (
       await xpnet.balanceOf(staker.address)
     ).toNumber();
     let receipt = await (
-      await staker.connect(addr1).stake(1000, 270 * 86400)
+      await staker.connect(addr1).stake(hundredTokens, 270 * 86400)
     ).wait();
     let event = receipt.events?.filter((x) => {
       return x.event == "Transfer";
     })[0];
-    assert(
-      (await xpnet.balanceOf(staker.address)).toNumber() ==
-        contractBalanceBefore + 1000,
-      "amount should be increased by 1000"
-    );
-    await ethers.provider.send("evm_increaseTime", [270 * 86401]);
+    await ethers.provider.send("evm_increaseTime", [270 * 86400]);
     await ethers.provider.send("evm_mine", []);
     expect(
-      (await staker.showAvailableRewards(event.args.tokenId)).toNumber()
-    ).to.be.equal(73);
+      (await staker.showAvailableRewards(event.args.tokenId)).toString()
+    ).to.be.equal("75000000000000000000");
   });
 
   it("stakes 100tokens for 365 days and tries to check rewards after maturity, should equal 125", async () => {
-    await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
-    await xpnet.connect(addr1).approve(staker.address, 1000);
+    const hundredTokens = "100000000000000000000";
+    await (
+      await xpnet.connect(owner).transfer(addr1.address, hundredTokens)
+    ).wait();
+    await xpnet.connect(addr1).approve(staker.address, hundredTokens);
     let contractBalanceBefore = (
       await xpnet.balanceOf(staker.address)
     ).toNumber();
     let receipt = await (
-      await staker.connect(addr1).stake(1000, 365 * 86400)
+      await staker.connect(addr1).stake(hundredTokens, 365 * 86400)
     ).wait();
     let event = receipt.events?.filter((x) => {
       return x.event == "Transfer";
     })[0];
-    assert(
-      (await xpnet.balanceOf(staker.address)).toNumber() ==
-        contractBalanceBefore + 1000,
-      "amount should be increased by 1000"
-    );
-    await ethers.provider.send("evm_increaseTime", [365 * 86401]);
+    await ethers.provider.send("evm_increaseTime", [365 * 86400]);
     await ethers.provider.send("evm_mine", []);
     expect(
-      (await staker.showAvailableRewards(event.args.tokenId)).toNumber()
-    ).to.be.equal(125);
+      (await staker.showAvailableRewards(event.args.tokenId)).toString()
+    ).to.be.equal("125000000000000000000");
   });
 
   it("stakes 100tokens for 90 days and fails when someone other than staker tries to  withdraw", async () => {
@@ -372,6 +364,25 @@ describe("XpNetStaker", function () {
     ).to.revertedWith(
       "VM Exception while processing transaction: reverted with reason string 'Maximum count for stakes reached.'"
     );
+  });
+
+  it("tests rewards after a day", async () => {
+    let oneToken = "1000000000000000000";
+    await (await xpnet.connect(owner).transfer(addr1.address, oneToken)).wait();
+    await xpnet.connect(addr1).approve(staker.address, oneToken);
+    const receipt = await (
+      await staker.connect(addr1).stake(oneToken, 90 * 86400)
+    ).wait();
+    let event = receipt.events?.filter((x) => {
+      return x.event == "StakeCreated";
+    })[0];
+    await ethers.provider.send("evm_increaseTime", [86400]);
+    await ethers.provider.send("evm_mine", []);
+    expect(
+      (
+        await staker.connect(addr1).showAvailableRewards(event.args.nftID)
+      ).toString()
+    ).to.be.equals("1250000000000000");
   });
 
   it("tests sudo decrease correction", async () => {

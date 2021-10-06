@@ -182,6 +182,8 @@ contract XpNetStaker is Ownable, ERC721, ERC721Enumerable, ERC721URIStorage {
         emit StakeRewardWithdrawn(msg.sender, _amt);
     }
 
+    event TestEvent(uint256 percent);
+
     /*
     Internal function to calculate the rewards.
     @param _lockInPeriod: The time period of the stake.
@@ -194,33 +196,26 @@ contract XpNetStaker is Ownable, ERC721, ERC721Enumerable, ERC721URIStorage {
         uint256 _startTime
     ) private view returns (uint256) {
         uint256 _reward;
+        uint256 timeDiff = block.timestamp - _startTime;
         if (
             _lockInPeriod == 90 days || (block.timestamp - _startTime) < 90 days
         ) {
-            uint256 rewardPercentage = (((block.timestamp - _startTime) /
-                _lockInPeriod) * 4050) / 365;
-            _reward = (_amt * rewardPercentage) / 1000;
+            _reward = (((_amt * 1125 * timeDiff))) / 90 days / 10000;
         } else if (
             _lockInPeriod == 180 days ||
             (block.timestamp - _startTime) < 180 days
         ) {
-            uint256 rewardPercentage = (((block.timestamp - _startTime) /
-                _lockInPeriod) * 13500) / 365;
-            _reward = (_amt * rewardPercentage) / 1000;
+            _reward = (((_amt * 3750 * timeDiff))) / 180 days / 10000;
         } else if (
             _lockInPeriod == 270 days ||
             (block.timestamp - _startTime) < 270 days
         ) {
-            uint256 rewardPercentage = (((block.timestamp - _startTime) /
-                _lockInPeriod) * 27000) / 365;
-            _reward = (_amt * rewardPercentage) / 1000;
+            _reward = (((_amt * 7500 * timeDiff))) / 270 days / 10000;
         } else if (
             _lockInPeriod == 365 days ||
             (block.timestamp - _startTime) < 365 days
         ) {
-            uint256 rewardPercentage = (((block.timestamp - _startTime) /
-                _lockInPeriod) * 45625) / 365;
-            _reward = (_amt * rewardPercentage) / 1000;
+            _reward = (((_amt * 12500 * timeDiff))) / 365 days / 10000;
         }
         return _reward;
     }
