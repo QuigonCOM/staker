@@ -182,8 +182,6 @@ contract XpNetStaker is Ownable, ERC721, ERC721Enumerable, ERC721URIStorage {
         emit StakeRewardWithdrawn(msg.sender, _amt);
     }
 
-    event TestEvent(uint256 percent);
-
     /*
     Internal function to calculate the rewards.
     @param _lockInPeriod: The time period of the stake.
