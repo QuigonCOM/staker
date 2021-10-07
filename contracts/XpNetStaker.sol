@@ -44,7 +44,6 @@ contract XpNetStaker is Ownable, ERC721, ERC721Enumerable, ERC721URIStorage {
     event StakeWithdrawn(address owner, uint256 amt);
     event StakeRewardWithdrawn(address owner, uint256 amt);
     event SudoWithdraw(address to, uint256 amt);
-    event TestingEvent(uint256 lockInPeriod, uint256 startTime, uint256 reward);
 
     function _beforeTokenTransfer(
         address from,
