@@ -385,6 +385,28 @@ describe("XpNetStaker", function () {
     ).to.be.equals("1250000000000000");
   });
 
+  it("tests that extra awards should not be awarded for after lock in period is complete", async () => {
+    const hundredTokens = "100000000000000000000";
+    await (
+      await xpnet.connect(owner).transfer(addr1.address, hundredTokens)
+    ).wait();
+    await xpnet.connect(addr1).approve(staker.address, hundredTokens);
+    let contractBalanceBefore = (
+      await xpnet.balanceOf(staker.address)
+    ).toNumber();
+    let receipt = await (
+      await staker.connect(addr1).stake(hundredTokens, 365 * 86400)
+    ).wait();
+    let event = receipt.events?.filter((x) => {
+      return x.event == "Transfer";
+    })[0];
+    await ethers.provider.send("evm_increaseTime", [700 * 86400]);
+    await ethers.provider.send("evm_mine", []);
+    expect(
+      (await staker.showAvailableRewards(event.args.tokenId)).toString()
+    ).to.be.equal("125000000000000000000");
+  });
+
   it("tests sudo decrease correction", async () => {
     await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
     await xpnet.connect(addr1).approve(staker.address, 1000);

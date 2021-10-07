@@ -127,6 +127,18 @@ contract XpNetStaker is Ownable, ERC721, ERC721Enumerable, ERC721URIStorage {
         stakedCount += _amt;
     }
 
+    function _calculateTimeDifference(uint256 _startTime, uint256 _lockInPeriod)
+        internal
+        view
+        returns (uint256)
+    {
+        if ((block.timestamp - _startTime) > _lockInPeriod) {
+            return _lockInPeriod;
+        } else {
+            return block.timestamp - _startTime;
+        }
+    }
+
     /*
     Withdraws a stake, the amount is always returned to the staker
     @requires - The Stake Time Period must be completed before it is ready to be withdrawn.
@@ -193,7 +205,7 @@ contract XpNetStaker is Ownable, ERC721, ERC721Enumerable, ERC721URIStorage {
         uint256 _startTime
     ) private view returns (uint256) {
         uint256 _reward;
-        uint256 timeDiff = block.timestamp - _startTime;
+        uint256 timeDiff = _calculateTimeDifference(_startTime, _lockInPeriod);
         if (
             _lockInPeriod == 90 days || (block.timestamp - _startTime) < 90 days
         ) {
