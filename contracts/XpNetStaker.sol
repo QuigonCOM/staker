@@ -15,9 +15,9 @@ contract XpNetStaker is Ownable, ERC721, ERC721Enumerable, ERC721URIStorage {
         uint256 rewardWithdrawn;
         uint256 startTime;
         address staker;
-        int256 correction;
-        bool isActive;
-        bool stakeWithdrawn;
+        int256  correction;
+        bool    isActive;
+        bool    stakeWithdrawn;
     }
     // The primary token for the contract.
     ERC20 private token;
@@ -104,22 +104,22 @@ contract XpNetStaker is Ownable, ERC721, ERC721Enumerable, ERC721URIStorage {
             "Please approve the staking amount in native token first."
         );
         require(
-            _timeperiod == 90 days ||
-                _timeperiod == 180 days ||
-                _timeperiod == 270 days ||
-                _timeperiod == 365 days,
+            _timeperiod == 90  days ||
+            _timeperiod == 180 days ||
+            _timeperiod == 270 days ||
+            _timeperiod == 365 days,
             "Please make sure the amount specified is one of the four [90 days, 180 days, 270 days, 365 days]."
         );
         Stake memory _newStake = Stake(
             _amt,
             nonce,
             _timeperiod,
-            0,
+            0,                  // rewardWithdrawn
             block.timestamp,
             msg.sender,
-            0,
-            true,
-            false
+            0,                  // correction
+            true,               // isActive
+            false               // stakeWithdrawn
         );
         _mint(msg.sender, nonce);
         stakes[nonce] = _newStake;
@@ -210,21 +210,25 @@ contract XpNetStaker is Ownable, ERC721, ERC721Enumerable, ERC721URIStorage {
         if (
             _lockInPeriod == 90 days || (block.timestamp - _startTime) < 90 days
         ) {
+            // 45 % APY
             _reward = (((_amt * 1125 * timeDiff))) / 90 days / 10000;
         } else if (
             _lockInPeriod == 180 days ||
             (block.timestamp - _startTime) < 180 days
         ) {
+            // 75 % APY
             _reward = (((_amt * 3750 * timeDiff))) / 180 days / 10000;
         } else if (
             _lockInPeriod == 270 days ||
             (block.timestamp - _startTime) < 270 days
         ) {
+            // 100 % APY
             _reward = (((_amt * 7500 * timeDiff))) / 270 days / 10000;
         } else if (
             _lockInPeriod == 365 days ||
             (block.timestamp - _startTime) < 365 days
         ) {
+            // 125 % APY
             _reward = (((_amt * 12500 * timeDiff))) / 365 days / 10000;
         }
         return _reward;
@@ -240,6 +244,10 @@ contract XpNetStaker is Ownable, ERC721, ERC721Enumerable, ERC721URIStorage {
         return block.timestamp >= _stake.startTime + _stake.lockInPeriod;
     }
 
+    /*
+    Shows the available rewards
+    @param _nftID: The nft id of the stake.
+     */
     function showAvailableRewards(uint256 _nftID)
         public
         view
