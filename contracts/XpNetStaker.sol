@@ -15,12 +15,12 @@ contract XpNetStaker is Ownable, ERC721, ERC721Enumerable, ERC721URIStorage {
         uint256 rewardWithdrawn;
         uint256 startTime;
         address staker;
-        int256  correction;
-        bool    isActive;
-        bool    stakeWithdrawn;
+        int256 correction;
+        bool isActive;
+        bool stakeWithdrawn;
     }
     // The primary token for the contract.
-    ERC20 private token;
+    ERC20 private immutable token;
 
     // The NFT nonce which is used to keep the track of nftIDs.
     uint256 private nonce = 0;
@@ -43,7 +43,9 @@ contract XpNetStaker is Ownable, ERC721, ERC721Enumerable, ERC721URIStorage {
     event StakeCreated(address owner, uint256 amt, uint256 nftID);
     event StakeWithdrawn(address owner, uint256 amt);
     event StakeRewardWithdrawn(address owner, uint256 amt);
+    event SudoTokensAdded(address to, uint256 amt);
     event SudoWithdraw(address to, uint256 amt);
+    event SudoTokensDeducted(address to, int256 amt);
 
     function _beforeTokenTransfer(
         address from,
@@ -94,9 +96,9 @@ contract XpNetStaker is Ownable, ERC721, ERC721Enumerable, ERC721URIStorage {
      */
     function stake(uint256 _amt, uint256 _timeperiod) public {
         require(_amt != 0, "You cant stake 0 tokens.");
-        require(_amt >= 1_500 * (10**18), "The minimum stake is 1,500 XPNET");
+        require(_amt >= 15e2 ether, "The minimum stake is 1,500 XPNET");
         require(
-            stakedCount + _amt <= 50_000_000 * (10**18),
+            stakedCount + _amt <= 5e7 ether,
             "Maximum count for stakes reached."
         );
         require(
@@ -104,22 +106,22 @@ contract XpNetStaker is Ownable, ERC721, ERC721Enumerable, ERC721URIStorage {
             "Please approve the staking amount in native token first."
         );
         require(
-            _timeperiod == 90  days ||
-            _timeperiod == 180 days ||
-            _timeperiod == 270 days ||
-            _timeperiod == 365 days,
+            _timeperiod == 90 days ||
+                _timeperiod == 180 days ||
+                _timeperiod == 270 days ||
+                _timeperiod == 365 days,
             "Please make sure the amount specified is one of the four [90 days, 180 days, 270 days, 365 days]."
         );
         Stake memory _newStake = Stake(
             _amt,
             nonce,
             _timeperiod,
-            0,                  // rewardWithdrawn
+            0, // rewardWithdrawn
             block.timestamp,
             msg.sender,
-            0,                  // correction
-            true,               // isActive
-            false               // stakeWithdrawn
+            0, // correction
+            true, // isActive
+            false // stakeWithdrawn
         );
         _mint(msg.sender, nonce);
         stakes[nonce] = _newStake;
@@ -279,6 +281,7 @@ contract XpNetStaker is Ownable, ERC721, ERC721Enumerable, ERC721URIStorage {
         returns (bool)
     {
         stakes[_nftID].correction += int256(_amt);
+        emit SudoTokensAdded(ownerOf(_nftID), _amt);
         return true;
     }
 
@@ -293,6 +296,7 @@ contract XpNetStaker is Ownable, ERC721, ERC721Enumerable, ERC721URIStorage {
         returns (bool)
     {
         stakes[_nftID].correction -= _amt;
+        emit SudoTokensDeducted(ownerOf(_nftID), _amt);
         return true;
     }
 
