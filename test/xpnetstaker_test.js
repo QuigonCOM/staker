@@ -112,10 +112,13 @@ describe("XpNetStaker", function () {
     })[0];
     await ethers.provider.send("evm_increaseTime", [90 * 80000]);
     let receipt2 = await (
-      await staker.connect(addr1).withdrawRewards(event.args.tokenId, 1)
+      await staker
+        .connect(addr1)
+        .withdrawRewards(event.args.tokenId, "1000000000000000000")
     ).wait();
     assert(
-      (await xpnet.balanceOf(addr1.address)).toNumber() == 1,
+      (await xpnet.balanceOf(addr1.address)).toString() ==
+        "1000000000000000000",
       "withdraw failed"
     );
   });
@@ -168,7 +171,7 @@ describe("XpNetStaker", function () {
     );
   });
 
-  it("stakes 100tokens for 90 days and tries to check rewards after maturity, should equal 11", async () => {
+  it("stakes 1500tokens for 90 days and tries to check rewards after maturity, should equal 168.75", async () => {
     const fifteenHundredTokens = "1500000000000000000000";
     await (
       await xpnet.connect(owner).transfer(addr1.address, fifteenHundredTokens)
@@ -190,7 +193,7 @@ describe("XpNetStaker", function () {
     ).to.be.equal("168750000000000000000");
   });
 
-  it("stakes 100tokens for 180 days and tries to check rewards after maturity, should equal 36", async () => {
+  it("stakes 1500tokens for 180 days and tries to check rewards after maturity, should equal 562.5", async () => {
     const fifteenHundredTokens = "1500000000000000000000";
     await (
       await xpnet.connect(owner).transfer(addr1.address, fifteenHundredTokens)
@@ -212,7 +215,7 @@ describe("XpNetStaker", function () {
     ).to.be.equal("562500000000000000000");
   });
 
-  it("stakes 100tokens for 270 days and tries to check rewards after maturity, should equal 73", async () => {
+  it("stakes 1500tokens for 270 days and tries to check rewards after maturity, should equal 1125", async () => {
     const fifteenHundredTokens = "1500000000000000000000";
     await (
       await xpnet.connect(owner).transfer(addr1.address, fifteenHundredTokens)
@@ -234,7 +237,7 @@ describe("XpNetStaker", function () {
     ).to.be.equal("1125000000000000000000");
   });
 
-  it("stakes 100tokens for 365 days and tries to check rewards after maturity, should equal 125", async () => {
+  it("stakes 1500tokens for 365 days and tries to check rewards after maturity, should equal 1875", async () => {
     const fifteenHundredTokens = "1500000000000000000000";
     await (
       await xpnet.connect(owner).transfer(addr1.address, fifteenHundredTokens)
@@ -256,7 +259,7 @@ describe("XpNetStaker", function () {
     ).to.be.equal("1875000000000000000000");
   });
 
-  it("stakes 100tokens for 90 days and fails when someone other than staker tries to  withdraw", async () => {
+  it("stakes 1500tokens for 90 days and fails when someone other than staker tries to withdraw", async () => {
     const fifteenHundredTokens = "1500000000000000000000";
     await (
       await xpnet.connect(owner).transfer(addr1.address, fifteenHundredTokens)
@@ -278,7 +281,7 @@ describe("XpNetStaker", function () {
     );
   });
 
-  it("stakes 100tokens for 90 days and fails when someone other than nft owner tries to  withdraw rewards", async () => {
+  it("stakes 1500tokens for 90 days and fails when someone other than nft owner tries to withdraw rewards, transfers the nft to the other address and then tries to withdraw and succeeds", async () => {
     const fifteenHundredTokens = "1500000000000000000000";
     await (
       await xpnet.connect(owner).transfer(addr1.address, fifteenHundredTokens)
@@ -302,7 +305,7 @@ describe("XpNetStaker", function () {
     );
   });
 
-  it("stakes 100tokens for 90 days and fails when someone other than nft owner tries to  withdraw rewards", async () => {
+  it("stakes 1500tokens for 90 days and fails when someone other than nft owner tries to  withdraw rewards", async () => {
     const fifteenHundredTokens = "1500000000000000000000";
     await (
       await xpnet.connect(owner).transfer(addr1.address, fifteenHundredTokens)
@@ -441,8 +444,8 @@ describe("XpNetStaker", function () {
     ).to.be.equal("1875000000000000000000");
   });
 
-  const fifteenHundredTokens = "1500000000000000000000";
   it("tests sudo decrease correction", async () => {
+    const fifteenHundredTokens = "1500000000000000000000";
     await (
       await xpnet.connect(owner).transfer(addr1.address, fifteenHundredTokens)
     ).wait();
