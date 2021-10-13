@@ -23,62 +23,70 @@ describe("XpNetStaker", function () {
   });
 
   it("stakes for 90 days without approving", async () => {
-    await expect(staker.stake(500, 90 * 86400)).to.be.revertedWith(
+    await expect(
+      staker.stake("1500000000000000000000", 90 * 86400)
+    ).to.be.revertedWith(
       "VM Exception while processing transaction: reverted with reason string 'ERC20: transfer amount exceeds allowance'"
     );
   });
 
   it("stakes tokens by addr1 for 90 days with approval", async () => {
-    await (await xpnet.connect(owner).transfer(addr1.address, 4000)).wait();
-    await xpnet.connect(addr1).approve(staker.address, 4000);
-    await expect(staker.connect(addr1).stake(1000, 90 * 86400)).to.emit(
-      staker,
-      "Transfer"
-    );
-    await expect(staker.connect(addr1).stake(1000, 180 * 86400)).to.emit(
-      staker,
-      "Transfer"
-    );
-    await expect(staker.connect(addr1).stake(1000, 270 * 86400)).to.emit(
-      staker,
-      "Transfer"
-    );
-    await expect(staker.connect(addr1).stake(1000, 365 * 86400)).to.emit(
-      staker,
-      "Transfer"
-    );
+    const sixThousandTokens = "6000000000000000000000";
+    const fifteenHundredTokens = "1500000000000000000000";
+    await (
+      await xpnet.connect(owner).transfer(addr1.address, sixThousandTokens)
+    ).wait();
+    await xpnet.connect(addr1).approve(staker.address, sixThousandTokens);
+    await expect(
+      staker.connect(addr1).stake(fifteenHundredTokens, 90 * 86400)
+    ).to.emit(staker, "Transfer");
+    await expect(
+      staker.connect(addr1).stake(fifteenHundredTokens, 180 * 86400)
+    ).to.emit(staker, "Transfer");
+    await expect(
+      staker.connect(addr1).stake(fifteenHundredTokens, 270 * 86400)
+    ).to.emit(staker, "Transfer");
+    await expect(
+      staker.connect(addr1).stake(fifteenHundredTokens, 365 * 86400)
+    ).to.emit(staker, "Transfer");
   });
 
   it("stakes tokens by addr1 for wrong number of days with approval", async () => {
-    await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
-    await xpnet.connect(addr1).approve(staker.address, 1000);
+    const fifteenHundredTokens = "1500000000000000000000";
+    await (
+      await xpnet.connect(owner).transfer(addr1.address, fifteenHundredTokens)
+    ).wait();
+    await xpnet.connect(addr1).approve(staker.address, fifteenHundredTokens);
     await expect(
-      staker.connect(addr1).stake(1000, 90 * 86200)
+      staker.connect(addr1).stake(fifteenHundredTokens, 90 * 86200)
     ).to.be.revertedWith(
       "VM Exception while processing transaction: reverted with reason string 'Please make sure the amount specified is one of the four [90 days, 180 days, 270 days, 365 days]."
     );
     await expect(
-      staker.connect(addr1).stake(1000, 180 * 86200)
+      staker.connect(addr1).stake(fifteenHundredTokens, 180 * 86200)
     ).to.be.revertedWith(
       "VM Exception while processing transaction: reverted with reason string 'Please make sure the amount specified is one of the four [90 days, 180 days, 270 days, 365 days]."
     );
     await expect(
-      staker.connect(addr1).stake(1000, 270 * 86200)
+      staker.connect(addr1).stake(fifteenHundredTokens, 270 * 86200)
     ).to.be.revertedWith(
       "VM Exception while processing transaction: reverted with reason string 'Please make sure the amount specified is one of the four [90 days, 180 days, 270 days, 365 days]."
     );
     await expect(
-      staker.connect(addr1).stake(1000, 365 * 86200)
+      staker.connect(addr1).stake(fifteenHundredTokens, 365 * 86200)
     ).to.be.revertedWith(
       "VM Exception while processing transaction: reverted with reason string 'Please make sure the amount specified is one of the four [90 days, 180 days, 270 days, 365 days]."
     );
   });
 
   it("tests the metadataUrl of the nft", async () => {
-    await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
-    await xpnet.connect(addr1).approve(staker.address, 1000);
+    const fifteenHundredTokens = "1500000000000000000000";
+    await (
+      await xpnet.connect(owner).transfer(addr1.address, fifteenHundredTokens)
+    ).wait();
+    await xpnet.connect(addr1).approve(staker.address, fifteenHundredTokens);
     let receipt = await (
-      await staker.connect(addr1).stake(1000, 90 * 86400)
+      await staker.connect(addr1).stake(fifteenHundredTokens, 90 * 86400)
     ).wait();
     let event = receipt.events?.filter((x) => {
       return x.event == "StakeCreated";
@@ -91,10 +99,13 @@ describe("XpNetStaker", function () {
   });
 
   it("stakes and tries to withdraw 1token from rewards", async () => {
-    await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
-    await xpnet.connect(addr1).approve(staker.address, 1000);
+    const fifteenHundredTokens = "1500000000000000000000";
+    await (
+      await xpnet.connect(owner).transfer(addr1.address, fifteenHundredTokens)
+    ).wait();
+    await xpnet.connect(addr1).approve(staker.address, fifteenHundredTokens);
     let receipt = await (
-      await staker.connect(addr1).stake(1000, 90 * 86400)
+      await staker.connect(addr1).stake(fifteenHundredTokens, 90 * 86400)
     ).wait();
     let event = receipt.events?.filter((x) => {
       return x.event == "Transfer";
@@ -110,10 +121,13 @@ describe("XpNetStaker", function () {
   });
 
   it("tries withdrawing tokens before maturity is reached", async () => {
-    await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
-    await xpnet.connect(addr1).approve(staker.address, 1000);
+    const fifteenHundredTokens = "1500000000000000000000";
+    await (
+      await xpnet.connect(owner).transfer(addr1.address, fifteenHundredTokens)
+    ).wait();
+    await xpnet.connect(addr1).approve(staker.address, fifteenHundredTokens);
     let receipt = await (
-      await staker.connect(addr1).stake(1000, 90 * 86400)
+      await staker.connect(addr1).stake(fifteenHundredTokens, 90 * 86400)
     ).wait();
     let event = receipt.events?.filter((x) => {
       return x.event == "StakeCreated";
@@ -128,10 +142,13 @@ describe("XpNetStaker", function () {
   });
 
   it("test checkIsUnlocked", async () => {
-    await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
-    await xpnet.connect(addr1).approve(staker.address, 1000);
+    const fifteenHundredTokens = "1500000000000000000000";
+    await (
+      await xpnet.connect(owner).transfer(addr1.address, fifteenHundredTokens)
+    ).wait();
+    await xpnet.connect(addr1).approve(staker.address, fifteenHundredTokens);
     let receipt = await (
-      await staker.connect(addr1).stake(1000, 90 * 86400)
+      await staker.connect(addr1).stake(fifteenHundredTokens, 90 * 86400)
     ).wait();
     let event = receipt.events?.filter((x) => {
       return x.event == "StakeCreated";
@@ -152,16 +169,16 @@ describe("XpNetStaker", function () {
   });
 
   it("stakes 100tokens for 90 days and tries to check rewards after maturity, should equal 11", async () => {
-    const hundredTokens = "100000000000000000000";
+    const fifteenHundredTokens = "1500000000000000000000";
     await (
-      await xpnet.connect(owner).transfer(addr1.address, hundredTokens)
+      await xpnet.connect(owner).transfer(addr1.address, fifteenHundredTokens)
     ).wait();
-    await xpnet.connect(addr1).approve(staker.address, hundredTokens);
+    await xpnet.connect(addr1).approve(staker.address, fifteenHundredTokens);
     let contractBalanceBefore = (
       await xpnet.balanceOf(staker.address)
     ).toNumber();
     let receipt = await (
-      await staker.connect(addr1).stake(hundredTokens, 90 * 86400)
+      await staker.connect(addr1).stake(fifteenHundredTokens, 90 * 86400)
     ).wait();
     let event = receipt.events?.filter((x) => {
       return x.event == "Transfer";
@@ -170,20 +187,20 @@ describe("XpNetStaker", function () {
     await ethers.provider.send("evm_mine", []);
     expect(
       (await staker.showAvailableRewards(event.args.tokenId)).toString()
-    ).to.be.equal("11250000000000000000");
+    ).to.be.equal("168750000000000000000");
   });
 
   it("stakes 100tokens for 180 days and tries to check rewards after maturity, should equal 36", async () => {
-    const hundredTokens = "100000000000000000000";
+    const fifteenHundredTokens = "1500000000000000000000";
     await (
-      await xpnet.connect(owner).transfer(addr1.address, hundredTokens)
+      await xpnet.connect(owner).transfer(addr1.address, fifteenHundredTokens)
     ).wait();
-    await xpnet.connect(addr1).approve(staker.address, hundredTokens);
+    await xpnet.connect(addr1).approve(staker.address, fifteenHundredTokens);
     let contractBalanceBefore = (
       await xpnet.balanceOf(staker.address)
     ).toNumber();
     let receipt = await (
-      await staker.connect(addr1).stake(hundredTokens, 180 * 86400)
+      await staker.connect(addr1).stake(fifteenHundredTokens, 180 * 86400)
     ).wait();
     let event = receipt.events?.filter((x) => {
       return x.event == "Transfer";
@@ -192,20 +209,20 @@ describe("XpNetStaker", function () {
     await ethers.provider.send("evm_mine", []);
     expect(
       (await staker.showAvailableRewards(event.args.tokenId)).toString()
-    ).to.be.equal("37500000000000000000");
+    ).to.be.equal("562500000000000000000");
   });
 
   it("stakes 100tokens for 270 days and tries to check rewards after maturity, should equal 73", async () => {
-    const hundredTokens = "100000000000000000000";
+    const fifteenHundredTokens = "1500000000000000000000";
     await (
-      await xpnet.connect(owner).transfer(addr1.address, hundredTokens)
+      await xpnet.connect(owner).transfer(addr1.address, fifteenHundredTokens)
     ).wait();
-    await xpnet.connect(addr1).approve(staker.address, hundredTokens);
+    await xpnet.connect(addr1).approve(staker.address, fifteenHundredTokens);
     let contractBalanceBefore = (
       await xpnet.balanceOf(staker.address)
     ).toNumber();
     let receipt = await (
-      await staker.connect(addr1).stake(hundredTokens, 270 * 86400)
+      await staker.connect(addr1).stake(fifteenHundredTokens, 270 * 86400)
     ).wait();
     let event = receipt.events?.filter((x) => {
       return x.event == "Transfer";
@@ -214,20 +231,20 @@ describe("XpNetStaker", function () {
     await ethers.provider.send("evm_mine", []);
     expect(
       (await staker.showAvailableRewards(event.args.tokenId)).toString()
-    ).to.be.equal("75000000000000000000");
+    ).to.be.equal("1125000000000000000000");
   });
 
   it("stakes 100tokens for 365 days and tries to check rewards after maturity, should equal 125", async () => {
-    const hundredTokens = "100000000000000000000";
+    const fifteenHundredTokens = "1500000000000000000000";
     await (
-      await xpnet.connect(owner).transfer(addr1.address, hundredTokens)
+      await xpnet.connect(owner).transfer(addr1.address, fifteenHundredTokens)
     ).wait();
-    await xpnet.connect(addr1).approve(staker.address, hundredTokens);
+    await xpnet.connect(addr1).approve(staker.address, fifteenHundredTokens);
     let contractBalanceBefore = (
       await xpnet.balanceOf(staker.address)
     ).toNumber();
     let receipt = await (
-      await staker.connect(addr1).stake(hundredTokens, 365 * 86400)
+      await staker.connect(addr1).stake(fifteenHundredTokens, 365 * 86400)
     ).wait();
     let event = receipt.events?.filter((x) => {
       return x.event == "Transfer";
@@ -236,17 +253,20 @@ describe("XpNetStaker", function () {
     await ethers.provider.send("evm_mine", []);
     expect(
       (await staker.showAvailableRewards(event.args.tokenId)).toString()
-    ).to.be.equal("125000000000000000000");
+    ).to.be.equal("1875000000000000000000");
   });
 
   it("stakes 100tokens for 90 days and fails when someone other than staker tries to  withdraw", async () => {
-    await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
-    await xpnet.connect(addr1).approve(staker.address, 1000);
+    const fifteenHundredTokens = "1500000000000000000000";
+    await (
+      await xpnet.connect(owner).transfer(addr1.address, fifteenHundredTokens)
+    ).wait();
+    await xpnet.connect(addr1).approve(staker.address, fifteenHundredTokens);
     let contractBalanceBefore = (
       await xpnet.balanceOf(staker.address)
     ).toNumber();
     let receipt = await (
-      await staker.connect(addr1).stake(1000, 365 * 86400)
+      await staker.connect(addr1).stake(fifteenHundredTokens, 365 * 86400)
     ).wait();
     let event = receipt.events?.filter((x) => {
       return x.event == "Transfer";
@@ -259,13 +279,16 @@ describe("XpNetStaker", function () {
   });
 
   it("stakes 100tokens for 90 days and fails when someone other than nft owner tries to  withdraw rewards", async () => {
-    await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
-    await xpnet.connect(addr1).approve(staker.address, 1000);
+    const fifteenHundredTokens = "1500000000000000000000";
+    await (
+      await xpnet.connect(owner).transfer(addr1.address, fifteenHundredTokens)
+    ).wait();
+    await xpnet.connect(addr1).approve(staker.address, fifteenHundredTokens);
     let contractBalanceBefore = (
       await xpnet.balanceOf(staker.address)
     ).toNumber();
     let receipt = await (
-      await staker.connect(addr1).stake(1000, 365 * 86400)
+      await staker.connect(addr1).stake(fifteenHundredTokens, 365 * 86400)
     ).wait();
     let event = receipt.events?.filter((x) => {
       return x.event == "Transfer";
@@ -280,13 +303,16 @@ describe("XpNetStaker", function () {
   });
 
   it("stakes 100tokens for 90 days and fails when someone other than nft owner tries to  withdraw rewards", async () => {
-    await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
-    await xpnet.connect(addr1).approve(staker.address, 1000);
+    const fifteenHundredTokens = "1500000000000000000000";
+    await (
+      await xpnet.connect(owner).transfer(addr1.address, fifteenHundredTokens)
+    ).wait();
+    await xpnet.connect(addr1).approve(staker.address, fifteenHundredTokens);
     let contractBalanceBefore = (
       await xpnet.balanceOf(staker.address)
     ).toNumber();
     let receipt = await (
-      await staker.connect(addr1).stake(1000, 365 * 86400)
+      await staker.connect(addr1).stake(fifteenHundredTokens, 365 * 86400)
     ).wait();
     let event = receipt.events?.filter((x) => {
       return x.event == "Transfer";
@@ -313,10 +339,13 @@ describe("XpNetStaker", function () {
   });
 
   it("tries to make sudo trasnsaction", async () => {
-    await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
-    await xpnet.connect(addr1).approve(staker.address, 1000);
+    const fifteenHundredTokens = "1500000000000000000000";
+    await (
+      await xpnet.connect(owner).transfer(addr1.address, fifteenHundredTokens)
+    ).wait();
+    await xpnet.connect(addr1).approve(staker.address, fifteenHundredTokens);
     let receipt = await (
-      await staker.connect(addr1).stake(1000, 90 * 86400)
+      await staker.connect(addr1).stake(fifteenHundredTokens, 90 * 86400)
     ).wait();
     let event = receipt.events?.filter((x) => {
       return x.event == "Transfer";
@@ -332,10 +361,13 @@ describe("XpNetStaker", function () {
   });
 
   it("tests sudo increase correct", async () => {
-    await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
-    await xpnet.connect(addr1).approve(staker.address, 1000);
+    const fifteenHundredTokens = "1500000000000000000000";
+    await (
+      await xpnet.connect(owner).transfer(addr1.address, fifteenHundredTokens)
+    ).wait();
+    await xpnet.connect(addr1).approve(staker.address, fifteenHundredTokens);
     let receipt = await (
-      await staker.connect(addr1).stake(1000, 90 * 86400)
+      await staker.connect(addr1).stake(fifteenHundredTokens, 90 * 86400)
     ).wait();
     let event = receipt.events?.filter((x) => {
       return x.event == "Transfer";
@@ -367,11 +399,13 @@ describe("XpNetStaker", function () {
   });
 
   it("tests rewards after a day", async () => {
-    let oneToken = "1000000000000000000";
-    await (await xpnet.connect(owner).transfer(addr1.address, oneToken)).wait();
-    await xpnet.connect(addr1).approve(staker.address, oneToken);
+    const fifteenHundredTokens = "1500000000000000000000";
+    await (
+      await xpnet.connect(owner).transfer(addr1.address, fifteenHundredTokens)
+    ).wait();
+    await xpnet.connect(addr1).approve(staker.address, fifteenHundredTokens);
     const receipt = await (
-      await staker.connect(addr1).stake(oneToken, 90 * 86400)
+      await staker.connect(addr1).stake(fifteenHundredTokens, 90 * 86400)
     ).wait();
     let event = receipt.events?.filter((x) => {
       return x.event == "StakeCreated";
@@ -382,20 +416,20 @@ describe("XpNetStaker", function () {
       (
         await staker.connect(addr1).showAvailableRewards(event.args.nftID)
       ).toString()
-    ).to.be.equals("1250000000000000");
+    ).to.be.equals("1875000000000000000");
   });
 
   it("tests that extra awards should not be awarded for after lock in period is complete", async () => {
-    const hundredTokens = "100000000000000000000";
+    const fifteenHundredTokens = "1500000000000000000000";
     await (
-      await xpnet.connect(owner).transfer(addr1.address, hundredTokens)
+      await xpnet.connect(owner).transfer(addr1.address, fifteenHundredTokens)
     ).wait();
-    await xpnet.connect(addr1).approve(staker.address, hundredTokens);
+    await xpnet.connect(addr1).approve(staker.address, fifteenHundredTokens);
     let contractBalanceBefore = (
       await xpnet.balanceOf(staker.address)
     ).toNumber();
     let receipt = await (
-      await staker.connect(addr1).stake(hundredTokens, 365 * 86400)
+      await staker.connect(addr1).stake(fifteenHundredTokens, 365 * 86400)
     ).wait();
     let event = receipt.events?.filter((x) => {
       return x.event == "Transfer";
@@ -404,14 +438,17 @@ describe("XpNetStaker", function () {
     await ethers.provider.send("evm_mine", []);
     expect(
       (await staker.showAvailableRewards(event.args.tokenId)).toString()
-    ).to.be.equal("125000000000000000000");
+    ).to.be.equal("1875000000000000000000");
   });
 
+  const fifteenHundredTokens = "1500000000000000000000";
   it("tests sudo decrease correction", async () => {
-    await (await xpnet.connect(owner).transfer(addr1.address, 1000)).wait();
-    await xpnet.connect(addr1).approve(staker.address, 1000);
+    await (
+      await xpnet.connect(owner).transfer(addr1.address, fifteenHundredTokens)
+    ).wait();
+    await xpnet.connect(addr1).approve(staker.address, fifteenHundredTokens);
     let receipt = await (
-      await staker.connect(addr1).stake(1000, 90 * 86400)
+      await staker.connect(addr1).stake(fifteenHundredTokens, 90 * 86400)
     ).wait();
 
     let event = receipt.events?.filter((x) => {
