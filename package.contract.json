@@ -1,5 +1,5 @@
 {
-  "name": "@types/xpnet-staker",
+  "name": "xpnet-staker",
   "version": "0.1.0",
   "main": "dist/index.js",
   "license": "MIT",
