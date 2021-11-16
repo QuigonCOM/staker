@@ -21,6 +21,9 @@ module.exports = {
   networks: {
     local: {
       url: "http://127.0.0.1:7545",
-    }
-  }
+    },
+    hardhat: {
+      allowUnlimitedContractSize: true,
+    },
+  },
 };
