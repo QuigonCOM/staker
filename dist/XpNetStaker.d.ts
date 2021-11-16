@@ -21,6 +21,7 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface XpNetStakerInterface extends ethers.utils.Interface {
   functions: {
+    "addAvailableRewards(uint256)": FunctionFragment;
     "approve(address,uint256)": FunctionFragment;
     "balanceOf(address)": FunctionFragment;
     "baseUri()": FunctionFragment;
@@ -30,8 +31,10 @@ interface XpNetStakerInterface extends ethers.utils.Interface {
     "name()": FunctionFragment;
     "owner()": FunctionFragment;
     "ownerOf(uint256)": FunctionFragment;
+    "pause()": FunctionFragment;
     "paused()": FunctionFragment;
     "renounceOwnership()": FunctionFragment;
+    "rewardsAvailable()": FunctionFragment;
     "safeTransferFrom(address,address,uint256)": FunctionFragment;
     "setApprovalForAll(address,bool)": FunctionFragment;
     "setBaseUri(string)": FunctionFragment;
@@ -50,10 +53,15 @@ interface XpNetStakerInterface extends ethers.utils.Interface {
     "totalSupply()": FunctionFragment;
     "transferFrom(address,address,uint256)": FunctionFragment;
     "transferOwnership(address)": FunctionFragment;
+    "unpause()": FunctionFragment;
     "withdraw(uint256)": FunctionFragment;
     "withdrawRewards(uint256,uint256)": FunctionFragment;
   };
 
+  encodeFunctionData(
+    functionFragment: "addAvailableRewards",
+    values: [BigNumberish]
+  ): string;
   encodeFunctionData(
     functionFragment: "approve",
     values: [string, BigNumberish]
@@ -78,9 +86,14 @@ interface XpNetStakerInterface extends ethers.utils.Interface {
     functionFragment: "ownerOf",
     values: [BigNumberish]
   ): string;
+  encodeFunctionData(functionFragment: "pause", values?: undefined): string;
   encodeFunctionData(functionFragment: "paused", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "renounceOwnership",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "rewardsAvailable",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -149,6 +162,7 @@ interface XpNetStakerInterface extends ethers.utils.Interface {
     functionFragment: "transferOwnership",
     values: [string]
   ): string;
+  encodeFunctionData(functionFragment: "unpause", values?: undefined): string;
   encodeFunctionData(
     functionFragment: "withdraw",
     values: [BigNumberish]
@@ -158,6 +172,10 @@ interface XpNetStakerInterface extends ethers.utils.Interface {
     values: [BigNumberish, BigNumberish]
   ): string;
 
+  decodeFunctionResult(
+    functionFragment: "addAvailableRewards",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "approve", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "balanceOf", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "baseUri", data: BytesLike): Result;
@@ -176,9 +194,14 @@ interface XpNetStakerInterface extends ethers.utils.Interface {
   decodeFunctionResult(functionFragment: "name", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "ownerOf", data: BytesLike): Result;
+  decodeFunctionResult(functionFragment: "pause", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "paused", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "renounceOwnership",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "rewardsAvailable",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -238,6 +261,7 @@ interface XpNetStakerInterface extends ethers.utils.Interface {
     functionFragment: "transferOwnership",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(functionFragment: "unpause", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "withdraw", data: BytesLike): Result;
   decodeFunctionResult(
     functionFragment: "withdrawRewards",
@@ -249,6 +273,7 @@ interface XpNetStakerInterface extends ethers.utils.Interface {
     "ApprovalForAll(address,address,bool)": EventFragment;
     "OwnershipTransferred(address,address)": EventFragment;
     "Paused(address)": EventFragment;
+    "RewardsAdded(uint256)": EventFragment;
     "StakeCreated(address,uint256,uint256)": EventFragment;
     "StakeRewardWithdrawn(address,uint256)": EventFragment;
     "StakeWithdrawn(address,uint256)": EventFragment;
@@ -263,6 +288,7 @@ interface XpNetStakerInterface extends ethers.utils.Interface {
   getEvent(nameOrSignatureOrTopic: "ApprovalForAll"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "OwnershipTransferred"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "Paused"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "RewardsAdded"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "StakeCreated"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "StakeRewardWithdrawn"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "StakeWithdrawn"): EventFragment;
@@ -294,6 +320,8 @@ export type OwnershipTransferredEvent = TypedEvent<
 >;
 
 export type PausedEvent = TypedEvent<[string] & { account: string }>;
+
+export type RewardsAddedEvent = TypedEvent<[BigNumber] & { amt: BigNumber }>;
 
 export type StakeCreatedEvent = TypedEvent<
   [string, BigNumber, BigNumber] & {
@@ -373,6 +401,11 @@ export class XpNetStaker extends BaseContract {
   interface: XpNetStakerInterface;
 
   functions: {
+    addAvailableRewards(
+      _amt: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     approve(
       to: string,
       tokenId: BigNumberish,
@@ -408,11 +441,17 @@ export class XpNetStaker extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[string]>;
 
+    pause(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     paused(overrides?: CallOverrides): Promise<[boolean]>;
 
     renounceOwnership(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
+
+    rewardsAvailable(overrides?: CallOverrides): Promise<[BigNumber]>;
 
     "safeTransferFrom(address,address,uint256)"(
       from: string,
@@ -534,6 +573,10 @@ export class XpNetStaker extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
+    unpause(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<ContractTransaction>;
+
     withdraw(
       _nftID: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -545,6 +588,11 @@ export class XpNetStaker extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
   };
+
+  addAvailableRewards(
+    _amt: BigNumberish,
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
 
   approve(
     to: string,
@@ -578,11 +626,17 @@ export class XpNetStaker extends BaseContract {
 
   ownerOf(tokenId: BigNumberish, overrides?: CallOverrides): Promise<string>;
 
+  pause(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   paused(overrides?: CallOverrides): Promise<boolean>;
 
   renounceOwnership(
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
+
+  rewardsAvailable(overrides?: CallOverrides): Promise<BigNumber>;
 
   "safeTransferFrom(address,address,uint256)"(
     from: string,
@@ -701,6 +755,10 @@ export class XpNetStaker extends BaseContract {
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
+  unpause(
+    overrides?: Overrides & { from?: string | Promise<string> }
+  ): Promise<ContractTransaction>;
+
   withdraw(
     _nftID: BigNumberish,
     overrides?: Overrides & { from?: string | Promise<string> }
@@ -713,6 +771,11 @@ export class XpNetStaker extends BaseContract {
   ): Promise<ContractTransaction>;
 
   callStatic: {
+    addAvailableRewards(
+      _amt: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<void>;
+
     approve(
       to: string,
       tokenId: BigNumberish,
@@ -745,9 +808,13 @@ export class XpNetStaker extends BaseContract {
 
     ownerOf(tokenId: BigNumberish, overrides?: CallOverrides): Promise<string>;
 
+    pause(overrides?: CallOverrides): Promise<void>;
+
     paused(overrides?: CallOverrides): Promise<boolean>;
 
     renounceOwnership(overrides?: CallOverrides): Promise<void>;
+
+    rewardsAvailable(overrides?: CallOverrides): Promise<BigNumber>;
 
     "safeTransferFrom(address,address,uint256)"(
       from: string,
@@ -863,6 +930,8 @@ export class XpNetStaker extends BaseContract {
       overrides?: CallOverrides
     ): Promise<void>;
 
+    unpause(overrides?: CallOverrides): Promise<void>;
+
     withdraw(_nftID: BigNumberish, overrides?: CallOverrides): Promise<void>;
 
     withdrawRewards(
@@ -930,6 +999,12 @@ export class XpNetStaker extends BaseContract {
     ): TypedEventFilter<[string], { account: string }>;
 
     Paused(account?: null): TypedEventFilter<[string], { account: string }>;
+
+    "RewardsAdded(uint256)"(
+      amt?: null
+    ): TypedEventFilter<[BigNumber], { amt: BigNumber }>;
+
+    RewardsAdded(amt?: null): TypedEventFilter<[BigNumber], { amt: BigNumber }>;
 
     "StakeCreated(address,uint256,uint256)"(
       owner?: null,
@@ -1025,6 +1100,11 @@ export class XpNetStaker extends BaseContract {
   };
 
   estimateGas: {
+    addAvailableRewards(
+      _amt: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     approve(
       to: string,
       tokenId: BigNumberish,
@@ -1060,11 +1140,17 @@ export class XpNetStaker extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
+    pause(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     paused(overrides?: CallOverrides): Promise<BigNumber>;
 
     renounceOwnership(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
+
+    rewardsAvailable(overrides?: CallOverrides): Promise<BigNumber>;
 
     "safeTransferFrom(address,address,uint256)"(
       from: string,
@@ -1161,6 +1247,10 @@ export class XpNetStaker extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
+    unpause(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<BigNumber>;
+
     withdraw(
       _nftID: BigNumberish,
       overrides?: Overrides & { from?: string | Promise<string> }
@@ -1174,6 +1264,11 @@ export class XpNetStaker extends BaseContract {
   };
 
   populateTransaction: {
+    addAvailableRewards(
+      _amt: BigNumberish,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     approve(
       to: string,
       tokenId: BigNumberish,
@@ -1212,11 +1307,17 @@ export class XpNetStaker extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
+    pause(
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
     paused(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     renounceOwnership(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
+
+    rewardsAvailable(overrides?: CallOverrides): Promise<PopulatedTransaction>;
 
     "safeTransferFrom(address,address,uint256)"(
       from: string,
@@ -1313,6 +1414,10 @@ export class XpNetStaker extends BaseContract {
 
     transferOwnership(
       newOwner: string,
+      overrides?: Overrides & { from?: string | Promise<string> }
+    ): Promise<PopulatedTransaction>;
+
+    unpause(
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
