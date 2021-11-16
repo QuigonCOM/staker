@@ -112,11 +112,7 @@ contract XpNetStaker is
     @param _timeperiod: The amount of time for which these are being staked.
     @param _metadataUri: The metadata URI of the NFT token.
      */
-    function stake(uint256 _amt, uint256 _timeperiod)
-        external
-        whenNotPaused
-        onlyOwner
-    {
+    function stake(uint256 _amt, uint256 _timeperiod) external whenNotPaused {
         require(_amt != 0, "You cant stake 0 tokens.");
         require(_amt >= 15e2 ether, "The minimum stake is 1,500 XPNET");
         require(
@@ -182,11 +178,6 @@ contract XpNetStaker is
     function withdraw(uint256 _nftID) external whenNotPaused {
         Stake memory _stake = stakes[_nftID];
         require(_stake.isActive, "The given token id is incorrect.");
-        require(rewardsAvailable != 0, "No rewards available.");
-        require(
-            rewardsAvailable - _stake.amount > 0,
-            "Not enough Rewards are available."
-        );
         require(
             block.timestamp >= _stake.startTime + _stake.lockInPeriod,
             "Stake hasnt matured yet."
@@ -199,6 +190,11 @@ contract XpNetStaker is
         require(
             token.transfer(msg.sender, _stake.amount),
             "failed to withdraw rewards"
+        );
+        require(rewardsAvailable != 0, "No rewards available.");
+        require(
+            rewardsAvailable - _stake.amount > 0,
+            "Not enough Rewards are available."
         );
         stakes[_nftID].stakeWithdrawn = true;
         emit StakeWithdrawn(msg.sender, _stake.amount);
