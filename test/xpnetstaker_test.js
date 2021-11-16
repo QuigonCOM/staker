@@ -19,7 +19,7 @@ describe("XpNetStaker", function () {
   });
 
   it("admin matches deployer", async () => {
-    await expect(await staker.owner()).to.equals(owner.address);
+    expect(await staker.owner()).to.equals(owner.address);
   });
 
   it("stakes for 90 days without approving", async () => {
@@ -101,6 +101,11 @@ describe("XpNetStaker", function () {
   it("stakes and tries to withdraw 1token from rewards", async () => {
     const fifteenHundredTokens = "1500000000000000000000";
     await (
+      await staker
+        .connect(owner)
+        .functions.addAvailableRewards("5000000000000000000")
+    ).wait();
+    await (
       await xpnet.connect(owner).transfer(addr1.address, fifteenHundredTokens)
     ).wait();
     await xpnet.connect(addr1).approve(staker.address, fifteenHundredTokens);
@@ -125,6 +130,11 @@ describe("XpNetStaker", function () {
 
   it("tries withdrawing tokens before maturity is reached", async () => {
     const fifteenHundredTokens = "1500000000000000000000";
+    await (
+      await staker
+        .connect(owner)
+        .functions.addAvailableRewards("2000000000000000000000")
+    ).wait();
     await (
       await xpnet.connect(owner).transfer(addr1.address, fifteenHundredTokens)
     ).wait();
@@ -283,6 +293,12 @@ describe("XpNetStaker", function () {
 
   it("stakes 1500tokens for 90 days and fails when someone other than nft owner tries to withdraw rewards, transfers the nft to the other address and then tries to withdraw and succeeds", async () => {
     const fifteenHundredTokens = "1500000000000000000000";
+
+    await (
+      await staker
+        .connect(owner)
+        .functions.addAvailableRewards("10000000000000000000000")
+    ).wait();
     await (
       await xpnet.connect(owner).transfer(addr1.address, fifteenHundredTokens)
     ).wait();
@@ -299,7 +315,9 @@ describe("XpNetStaker", function () {
     await ethers.provider.send("evm_increaseTime", [365 * 86401]);
     await ethers.provider.send("evm_mine", []);
     expect(
-      staker.connect(addr2).withdrawRewards(event.args.tokenId, 5)
+      staker
+        .connect(addr2)
+        .withdrawRewards(event.args.tokenId, fifteenHundredTokens)
     ).to.revertedWith(
       "VM Exception while processing transaction: reverted with reason string 'You dont own this nft.'"
     );
@@ -307,6 +325,11 @@ describe("XpNetStaker", function () {
 
   it("stakes 1500tokens for 90 days and fails when someone other than nft owner tries to  withdraw rewards", async () => {
     const fifteenHundredTokens = "1500000000000000000000";
+    await (
+      await staker
+        .connect(owner)
+        .functions.addAvailableRewards("10000000000000000000000")
+    ).wait();
     await (
       await xpnet.connect(owner).transfer(addr1.address, fifteenHundredTokens)
     ).wait();
@@ -343,6 +366,11 @@ describe("XpNetStaker", function () {
 
   it("tries to make sudo trasnsaction", async () => {
     const fifteenHundredTokens = "1500000000000000000000";
+    await (
+      await staker
+        .connect(owner)
+        .functions.addAvailableRewards("10000000000000000000000")
+    ).wait();
     await (
       await xpnet.connect(owner).transfer(addr1.address, fifteenHundredTokens)
     ).wait();
