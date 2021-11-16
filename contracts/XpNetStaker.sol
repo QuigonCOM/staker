@@ -14,7 +14,7 @@ contract XpNetStaker is
     ERC721URIStorage,
     ERC721Pausable
 {
-    // A struct represnting a stake.
+    // A struct representing a stake.
     struct Stake {
         uint256 amount;
         uint256 nftTokenId;
@@ -36,6 +36,8 @@ contract XpNetStaker is
 
     uint256 public stakedCount = 0;
 
+    uint256 public rewardsAvailable = 0;
+
     // stakes[nftTokenId] => Stake
     mapping(uint256 => Stake) public stakes;
 
@@ -53,6 +55,7 @@ contract XpNetStaker is
     event SudoTokensAdded(address to, uint256 amt);
     event SudoWithdraw(address to, uint256 amt);
     event SudoTokensDeducted(address to, int256 amt);
+    event RewardsAdded(uint256 amt);
 
     function _beforeTokenTransfer(
         address from,
@@ -60,6 +63,14 @@ contract XpNetStaker is
         uint256 tokenId
     ) internal override(ERC721, ERC721Enumerable, ERC721Pausable) {
         super._beforeTokenTransfer(from, to, tokenId);
+    }
+
+    function pause() public onlyOwner whenNotPaused {
+        _pause();
+    }
+
+    function unpause() public onlyOwner whenPaused {
+        _unpause();
     }
 
     function _burn(uint256 tokenId)
@@ -101,7 +112,11 @@ contract XpNetStaker is
     @param _timeperiod: The amount of time for which these are being staked.
     @param _metadataUri: The metadata URI of the NFT token.
      */
-    function stake(uint256 _amt, uint256 _timeperiod) external whenNotPaused {
+    function stake(uint256 _amt, uint256 _timeperiod)
+        external
+        whenNotPaused
+        onlyOwner
+    {
         require(_amt != 0, "You cant stake 0 tokens.");
         require(_amt >= 15e2 ether, "The minimum stake is 1,500 XPNET");
         require(
@@ -137,6 +152,16 @@ contract XpNetStaker is
         stakedCount += _amt;
     }
 
+    function addAvailableRewards(uint256 _amt) external onlyOwner {
+        require(_amt != 0, "You cant add 0 XPNET to the rewards pool.");
+        require(
+            rewardsAvailable + _amt <= 5e7 ether,
+            "Maximum count for rewards reached."
+        );
+        rewardsAvailable += _amt;
+        emit RewardsAdded(_amt);
+    }
+
     function _calculateTimeDifference(uint256 _startTime, uint256 _lockInPeriod)
         internal
         view
@@ -157,6 +182,11 @@ contract XpNetStaker is
     function withdraw(uint256 _nftID) external whenNotPaused {
         Stake memory _stake = stakes[_nftID];
         require(_stake.isActive, "The given token id is incorrect.");
+        require(rewardsAvailable != 0, "No rewards available.");
+        require(
+            rewardsAvailable - _stake.amount > 0,
+            "Not enough Rewards are available."
+        );
         require(
             block.timestamp >= _stake.startTime + _stake.lockInPeriod,
             "Stake hasnt matured yet."
@@ -199,7 +229,11 @@ contract XpNetStaker is
             _amt <= _final,
             "cannot withdraw amount more than currently earned rewards"
         );
-
+        require(rewardsAvailable != 0, "No rewards available.");
+        require(
+            rewardsAvailable - _amt > 0,
+            "Not enough Rewards are available."
+        );
         require(token.transfer(msg.sender, _amt), "failed to withdraw rewards");
 
         stakes[_nftID].rewardWithdrawn += _amt;
